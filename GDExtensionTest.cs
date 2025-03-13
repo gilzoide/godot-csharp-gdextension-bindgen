@@ -9,7 +9,7 @@ public partial class GDExtensionTest : Node
 	public override void _Ready()
 	{
 		lua.OpenLibraries();
-		var result = lua.DoString("print('Oi'");
+		Variant result = lua.DoString("return 'Hello from Lua!'");
 		GD.Print(result);
 	}
 }
