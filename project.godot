@@ -12,6 +12,7 @@ config_version=5
 
 config/name="CSharp GDExtension Bindgen"
 config/description="Test project for C# GDExtension Bindgen addon"
+run/main_scene="uid://d3k4o5rhwbja6"
 config/features=PackedStringArray("4.4", "C#", "Mobile")
 config/icon="res://icon.svg"
 
