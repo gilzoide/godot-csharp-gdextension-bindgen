@@ -7,7 +7,6 @@
 ## generate C# bindings from GDExtension.
 ## 
 ## TODO: support constant integers that are not part of any enum
-## TODO: get/set properties inherited from engine class directly without Get/Set
 ## TODO: cache StringNames used by class
 @tool
 extends EditorPlugin
@@ -104,13 +103,25 @@ func generate_csharp_script(cls_name: StringName):
 		regions.append("#endregion")
 	
 	var properties = PackedStringArray()
-	for property in ClassDB.class_get_property_list(cls_name, no_inheritance):
+	for property in ClassDB.class_get_property_list(cls_name, true):
 		if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
 			continue
 		properties.append(_generate_property(cls_name, property))
 	if not properties.is_empty():
 		regions.append("#region Properties")
 		regions.append("\n\n".join(properties))
+		regions.append("#endregion")
+	
+	var inherited_properties = PackedStringArray()
+	if not parent_class_is_extension:
+		for inherited_class in _get_parent_classes(cls_name):
+			for property in ClassDB.class_get_property_list(inherited_class, true):
+				if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
+					continue
+				inherited_properties.append(_generate_property(inherited_class, property))
+	if not inherited_properties.is_empty():
+		regions.append("#region Inherited Properties")
+		regions.append("\n\n".join(inherited_properties))
 		regions.append("#endregion")
 	
 	var methods = PackedStringArray()
@@ -125,15 +136,11 @@ func generate_csharp_script(cls_name: StringName):
 	
 	var inherited_methods = PackedStringArray()
 	if not parent_class_is_extension:
-		var inherited_class = parent_class
-		while true:
+		for inherited_class in _get_parent_classes(cls_name):
 			for method in ClassDB.class_get_method_list(inherited_class, true):
 				if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
 					continue
 				inherited_methods.append(_generate_method(inherited_class, method))
-			if inherited_class == "Object":
-				break
-			inherited_class = ClassDB.get_parent_class(inherited_class)
 	if not inherited_methods.is_empty():
 		regions.append("#region Inherited Methods")
 		regions.append("\n\n".join(inherited_methods))
@@ -212,41 +219,43 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 
 static func _generate_property(cls_name: StringName, property: Dictionary) -> String:
 	var property_name = property["name"]
+	var csharp_property_name = property_name.to_pascal_case()
 	var property_type = _get_property_type(property)
 	
 	var getset = PackedStringArray()
-	if Engine.get_version_info().hex >= 0x040400:
-		var getter = ClassDB.class_get_property_getter(cls_name, property_name)
-		if getter:
+	
+	var getter = ClassDB.class_get_property_getter(cls_name, property_name)
+	if getter:
+		if _is_extension_class(cls_name):
 			getset.append("get => {get_cast}_object.Get(\"{property_name}\");".format({
 				get_cast = _property_get_cast(property),
 				property_name = property_name,
 			}))
-		
-		var setter = ClassDB.class_get_property_setter(cls_name, property_name)
-		if setter:
+		else:
+			getset.append("get => _object.{csharp_property_name};".format({
+				csharp_property_name = csharp_property_name,
+			}))
+	
+	var setter = ClassDB.class_get_property_setter(cls_name, property_name)
+	if setter:
+		if _is_extension_class(cls_name):
 			getset.append("set => _object.Set(\"{property_name}\", {set_cast}value);".format({
 				set_cast = _property_set_cast(property),
 				property_name = property_name,
 			}))
-	else:
-		getset.append("get => {get_cast}_object.Get(\"{property_name}\").As<{property_type}>();".format({
-			get_cast = _property_get_cast(property),
-			property_name = property_name,
-		}))
-		getset.append("set => _object.Set(\"{property_name}\", {set_cast}value);".format({
-			set_cast = _property_set_cast(property),
-			property_name = property_name,
-		}))
+		else:
+			getset.append("set => _object.{csharp_property_name} = value;".format({
+				csharp_property_name = csharp_property_name,
+			}))
 	
 	return """
-		public {property_type} {property_name}
+		public {property_type} {csharp_property_name}
 		{
 		{getset}
 		}
 	""".dedent().format({
 		property_type = property_type,
-		property_name = property_name.to_pascal_case(),
+		csharp_property_name = csharp_property_name,
 		getset = "\n".join(getset).indent("\t"),
 	}).strip_edges()
 
@@ -514,3 +523,13 @@ static func _get_method_return_type(method_name: StringName, method_return: Dict
 			return "void"
 	else:
 		return _get_property_type(method_return)
+
+
+static func _get_parent_classes(cls_name: StringName) -> Array[StringName]:
+	var parent_classes = [] as Array[StringName]
+	while true:
+		cls_name = ClassDB.get_parent_class(cls_name)
+		parent_classes.append(cls_name)
+		if cls_name == "Object":
+			break
+	return parent_classes

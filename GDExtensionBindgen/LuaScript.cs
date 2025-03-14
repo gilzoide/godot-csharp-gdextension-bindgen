@@ -29,36 +29,36 @@ public class LuaScript
 	public static implicit operator Variant(LuaScript self) => self?._object;
 	public static explicit operator LuaScript(Variant variant) => new(variant);
 
-	#region Properties
+	#region Inherited Properties
 
 	public string SourceCode
 	{
-		get => (string)_object.Get("source_code");
-		set => _object.Set("source_code", value);
+		get => _object.SourceCode;
+		set => _object.SourceCode = value;
 	}
 
 	public bool ResourceLocalToScene
 	{
-		get => (bool)_object.Get("resource_local_to_scene");
-		set => _object.Set("resource_local_to_scene", value);
+		get => _object.ResourceLocalToScene;
+		set => _object.ResourceLocalToScene = value;
 	}
 
 	public string ResourcePath
 	{
-		get => (string)_object.Get("resource_path");
-		set => _object.Set("resource_path", value);
+		get => _object.ResourcePath;
+		set => _object.ResourcePath = value;
 	}
 
 	public string ResourceName
 	{
-		get => (string)_object.Get("resource_name");
-		set => _object.Set("resource_name", value);
+		get => _object.ResourceName;
+		set => _object.ResourceName = value;
 	}
 
 	public string ResourceSceneUniqueId
 	{
-		get => (string)_object.Get("resource_scene_unique_id");
-		set => _object.Set("resource_scene_unique_id", value);
+		get => _object.ResourceSceneUniqueId;
+		set => _object.ResourceSceneUniqueId = value;
 	}
 
 	#endregion
