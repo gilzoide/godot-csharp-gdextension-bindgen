@@ -27,7 +27,7 @@ public class LuaScriptResourceFormatSaver
 
 	public static implicit operator ResourceFormatSaver(LuaScriptResourceFormatSaver self) => self?._object;
 	public static implicit operator Variant(LuaScriptResourceFormatSaver self) => self?._object;
-	public static explicit operator LuaScriptResourceFormatSaver(Variant variant) => new(variant);
+	public static explicit operator LuaScriptResourceFormatSaver(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Inherited Methods
 

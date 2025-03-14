@@ -27,7 +27,7 @@ public class LuaScriptLanguage
 
 	public static implicit operator ScriptLanguageExtension(LuaScriptLanguage self) => self?._object;
 	public static implicit operator Variant(LuaScriptLanguage self) => self?._object;
-	public static explicit operator LuaScriptLanguage(Variant variant) => new(variant);
+	public static explicit operator LuaScriptLanguage(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Inherited Methods
 

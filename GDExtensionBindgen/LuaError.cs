@@ -27,7 +27,7 @@ public class LuaError
 
 	public static implicit operator RefCounted(LuaError self) => self?._object;
 	public static implicit operator Variant(LuaError self) => self?._object;
-	public static explicit operator LuaError(Variant variant) => new(variant);
+	public static explicit operator LuaError(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Enums
 

@@ -27,7 +27,7 @@ public class LuaScriptResourceFormatLoader
 
 	public static implicit operator ResourceFormatLoader(LuaScriptResourceFormatLoader self) => self?._object;
 	public static implicit operator Variant(LuaScriptResourceFormatLoader self) => self?._object;
-	public static explicit operator LuaScriptResourceFormatLoader(Variant variant) => new(variant);
+	public static explicit operator LuaScriptResourceFormatLoader(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Inherited Methods
 

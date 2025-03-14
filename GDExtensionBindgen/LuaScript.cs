@@ -27,7 +27,7 @@ public class LuaScript
 
 	public static implicit operator ScriptExtension(LuaScript self) => self?._object;
 	public static implicit operator Variant(LuaScript self) => self?._object;
-	public static explicit operator LuaScript(Variant variant) => new(variant);
+	public static explicit operator LuaScript(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Inherited Properties
 

@@ -24,7 +24,7 @@ public class LuaTable : LuaObject
 
 	public static implicit operator RefCounted(LuaTable self) => self?._object;
 	public static implicit operator Variant(LuaTable self) => self?._object;
-	public static explicit operator LuaTable(Variant variant) => new(variant);
+	public static explicit operator LuaTable(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Methods
 

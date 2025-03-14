@@ -27,7 +27,7 @@ public class LuaState
 
 	public static implicit operator RefCounted(LuaState self) => self?._object;
 	public static implicit operator Variant(LuaState self) => self?._object;
-	public static explicit operator LuaState(Variant variant) => new(variant);
+	public static explicit operator LuaState(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Enums
 

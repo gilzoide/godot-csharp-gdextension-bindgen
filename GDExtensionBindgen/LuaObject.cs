@@ -27,7 +27,7 @@ public class LuaObject
 
 	public static implicit operator RefCounted(LuaObject self) => self?._object;
 	public static implicit operator Variant(LuaObject self) => self?._object;
-	public static explicit operator LuaObject(Variant variant) => new(variant);
+	public static explicit operator LuaObject(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Methods
 

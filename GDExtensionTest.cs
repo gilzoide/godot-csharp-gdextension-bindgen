@@ -4,7 +4,7 @@ using GDExtensionBindgen;
 
 public partial class GDExtensionTest : Node
 {
-	private LuaState lua = new LuaState();
+	private readonly LuaState lua = new();
 
 	public override void _Ready()
 	{

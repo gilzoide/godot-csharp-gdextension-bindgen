@@ -87,7 +87,7 @@ func generate_csharp_script(cls_name: StringName):
 	var casts = """
 		public static implicit operator {engine_class}({cls_name} self) => self?._object;
 		public static implicit operator Variant({cls_name} self) => self?._object;
-		public static explicit operator {cls_name}(Variant variant) => new(variant);
+		public static explicit operator {cls_name}(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 	""".dedent().format({
 		cls_name = cls_name,
 		engine_class = engine_class,

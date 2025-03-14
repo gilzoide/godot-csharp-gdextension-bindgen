@@ -24,7 +24,7 @@ public class LuaCoroutine : LuaObject
 
 	public static implicit operator RefCounted(LuaCoroutine self) => self?._object;
 	public static implicit operator Variant(LuaCoroutine self) => self?._object;
-	public static explicit operator LuaCoroutine(Variant variant) => new(variant);
+	public static explicit operator LuaCoroutine(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
 	#region Enums
 

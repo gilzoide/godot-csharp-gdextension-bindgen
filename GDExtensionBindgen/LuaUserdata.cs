@@ -24,5 +24,5 @@ public class LuaUserdata : LuaTable
 
 	public static implicit operator RefCounted(LuaUserdata self) => self?._object;
 	public static implicit operator Variant(LuaUserdata self) => self?._object;
-	public static explicit operator LuaUserdata(Variant variant) => new(variant);
+	public static explicit operator LuaUserdata(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 }
