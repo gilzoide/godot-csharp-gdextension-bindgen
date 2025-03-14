@@ -28,14 +28,14 @@ public class LuaFunction : LuaObject
 
 	#region Methods
 
-	public Godot.Variant Invokev(Godot.Collections.Array @arg_array)
+	public Variant Invokev(Godot.Collections.Array @arg_array)
 	{
-		return (Godot.Variant)_object.Call("invokev", @arg_array);
+		return (Variant)_object.Call("invokev", @arg_array);
 	}
 
-	public Godot.Variant Invoke(params Godot.Variant[] varargs)
+	public Variant Invoke(params Variant[] varargs)
 	{
-		return (Godot.Variant)_object.Call("invoke", varargs);
+		return (Variant)_object.Call("invoke", varargs);
 	}
 
 	public Godot.Callable ToCallable()

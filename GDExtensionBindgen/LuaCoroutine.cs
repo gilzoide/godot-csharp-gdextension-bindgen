@@ -57,19 +57,19 @@ public class LuaCoroutine : LuaObject
 		return (LuaCoroutine.LuaCoroutineStatusEnum)(int)_object.Call("get_status");
 	}
 
-	public Godot.Variant Resumev(Godot.Collections.Array @arguments)
+	public Variant Resumev(Godot.Collections.Array @arguments)
 	{
-		return (Godot.Variant)_object.Call("resumev", @arguments);
+		return (Variant)_object.Call("resumev", @arguments);
 	}
 
-	public Godot.Variant Resume(params Godot.Variant[] varargs)
+	public Variant Resume(params Variant[] varargs)
 	{
-		return (Godot.Variant)_object.Call("resume", varargs);
+		return (Variant)_object.Call("resume", varargs);
 	}
 
 	public static LuaCoroutine Create(LuaFunction @function)
 	{
-		return (LuaCoroutine)Godot.ClassDB.ClassCallStatic(ClassName, "create", @function);
+		return (LuaCoroutine)ClassDB.ClassCallStatic(ClassName, "create", @function);
 	}
 
 	#endregion

@@ -14,7 +14,7 @@ public class LuaScriptResourceFormatSaver
 	public LuaScriptResourceFormatSaver() : this(ClassName)
 	{
 	}
-	protected LuaScriptResourceFormatSaver(StringName @class) : this(Godot.ClassDB.Instantiate(@class))
+	protected LuaScriptResourceFormatSaver(StringName @class) : this(ClassDB.Instantiate(@class))
 	{
 	}
 	protected LuaScriptResourceFormatSaver(Variant variant) : this((ResourceFormatSaver) variant)
@@ -66,22 +66,22 @@ public class LuaScriptResourceFormatSaver
 		return _object.IsClass(@class);
 	}
 
-	public void Set(Godot.StringName @property, Godot.Variant @value)
+	public void Set(Godot.StringName @property, Variant @value)
 	{
 		_object.Set(@property, @value);
 	}
 
-	public Godot.Variant Get(Godot.StringName @property)
+	public Variant Get(Godot.StringName @property)
 	{
 		return _object.Get(@property);
 	}
 
-	public void SetIndexed(Godot.NodePath @property_path, Godot.Variant @value)
+	public void SetIndexed(Godot.NodePath @property_path, Variant @value)
 	{
 		_object.SetIndexed(@property_path, @value);
 	}
 
-	public Godot.Variant GetIndexed(Godot.NodePath @property_path)
+	public Variant GetIndexed(Godot.NodePath @property_path)
 	{
 		return _object.GetIndexed(@property_path);
 	}
@@ -101,7 +101,7 @@ public class LuaScriptResourceFormatSaver
 		return _object.PropertyCanRevert(@property);
 	}
 
-	public Godot.Variant PropertyGetRevert(Godot.StringName @property)
+	public Variant PropertyGetRevert(Godot.StringName @property)
 	{
 		return _object.PropertyGetRevert(@property);
 	}
@@ -121,17 +121,17 @@ public class LuaScriptResourceFormatSaver
 		return _object.GetInstanceId();
 	}
 
-	public void SetScript(Godot.Variant @script)
+	public void SetScript(Variant @script)
 	{
 		_object.SetScript(@script);
 	}
 
-	public Godot.Variant GetScript()
+	public Variant GetScript()
 	{
 		return _object.GetScript();
 	}
 
-	public void SetMeta(Godot.StringName @name, Godot.Variant @value)
+	public void SetMeta(Godot.StringName @name, Variant @value)
 	{
 		_object.SetMeta(@name, @value);
 	}
@@ -141,7 +141,7 @@ public class LuaScriptResourceFormatSaver
 		_object.RemoveMeta(@name);
 	}
 
-	public Godot.Variant GetMeta(Godot.StringName @name, Godot.Variant @default = default)
+	public Variant GetMeta(Godot.StringName @name, Variant @default = default)
 	{
 		return _object.GetMeta(@name, @default);
 	}
@@ -151,7 +151,7 @@ public class LuaScriptResourceFormatSaver
 		return _object.HasMeta(@name);
 	}
 
-	public Godot.Collections.Array<Godot.StringName> GetMetaList()
+	public Godot.Collections.Array<StringName> GetMetaList()
 	{
 		return _object.GetMetaList();
 	}
@@ -172,27 +172,27 @@ public class LuaScriptResourceFormatSaver
 		_object.RemoveUserSignal(@signal);
 	}
 
-	public Godot.Error EmitSignal(Godot.StringName @signal, params Godot.Variant[] varargs)
+	public Godot.Error EmitSignal(Godot.StringName @signal, params Variant[] varargs)
 	{
 		return _object.EmitSignal(@signal, varargs);
 	}
 
-	public Godot.Variant Call(Godot.StringName @method, params Godot.Variant[] varargs)
+	public Variant Call(Godot.StringName @method, params Variant[] varargs)
 	{
 		return _object.Call(@method, varargs);
 	}
 
-	public Godot.Variant CallDeferred(Godot.StringName @method, params Godot.Variant[] varargs)
+	public Variant CallDeferred(Godot.StringName @method, params Variant[] varargs)
 	{
 		return _object.CallDeferred(@method, varargs);
 	}
 
-	public void SetDeferred(Godot.StringName @property, Godot.Variant @value)
+	public void SetDeferred(Godot.StringName @property, Variant @value)
 	{
 		_object.SetDeferred(@property, @value);
 	}
 
-	public Godot.Variant Callv(Godot.StringName @method, Godot.Collections.Array @arg_array)
+	public Variant Callv(Godot.StringName @method, Godot.Collections.Array @arg_array)
 	{
 		return _object.Callv(@method, @arg_array);
 	}

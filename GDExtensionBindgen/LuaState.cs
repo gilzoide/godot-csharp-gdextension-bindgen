@@ -14,7 +14,7 @@ public class LuaState
 	public LuaState() : this(ClassName)
 	{
 	}
-	protected LuaState(StringName @class) : this(Godot.ClassDB.Instantiate(@class))
+	protected LuaState(StringName @class) : this(ClassDB.Instantiate(@class))
 	{
 	}
 	protected LuaState(Variant variant) : this((RefCounted) variant)
@@ -85,24 +85,24 @@ public class LuaState
 		return (LuaTable)_object.Call("create_table", @initial_values);
 	}
 
-	public Godot.Variant LoadString(string @chunk, string @chunkname = "", LuaTable @env = default)
+	public Variant LoadString(string @chunk, string @chunkname = "", LuaTable @env = default)
 	{
-		return (Godot.Variant)_object.Call("load_string", @chunk, @chunkname, @env);
+		return (Variant)_object.Call("load_string", @chunk, @chunkname, @env);
 	}
 
-	public Godot.Variant LoadFile(string @filename, int @buffer_size = 1024, LuaTable @env = default)
+	public Variant LoadFile(string @filename, int @buffer_size = 1024, LuaTable @env = default)
 	{
-		return (Godot.Variant)_object.Call("load_file", @filename, @buffer_size, @env);
+		return (Variant)_object.Call("load_file", @filename, @buffer_size, @env);
 	}
 
-	public Godot.Variant DoString(string @chunk, string @chunkname = "", LuaTable @env = default)
+	public Variant DoString(string @chunk, string @chunkname = "", LuaTable @env = default)
 	{
-		return (Godot.Variant)_object.Call("do_string", @chunk, @chunkname, @env);
+		return (Variant)_object.Call("do_string", @chunk, @chunkname, @env);
 	}
 
-	public Godot.Variant DoFile(string @filename, int @buffer_size = 1024, LuaTable @env = default)
+	public Variant DoFile(string @filename, int @buffer_size = 1024, LuaTable @env = default)
 	{
-		return (Godot.Variant)_object.Call("do_file", @filename, @buffer_size, @env);
+		return (Variant)_object.Call("do_file", @filename, @buffer_size, @env);
 	}
 
 	public LuaTable GetGlobals()
@@ -154,22 +154,22 @@ public class LuaState
 		return _object.IsClass(@class);
 	}
 
-	public void Set(Godot.StringName @property, Godot.Variant @value)
+	public void Set(Godot.StringName @property, Variant @value)
 	{
 		_object.Set(@property, @value);
 	}
 
-	public Godot.Variant Get(Godot.StringName @property)
+	public Variant Get(Godot.StringName @property)
 	{
 		return _object.Get(@property);
 	}
 
-	public void SetIndexed(Godot.NodePath @property_path, Godot.Variant @value)
+	public void SetIndexed(Godot.NodePath @property_path, Variant @value)
 	{
 		_object.SetIndexed(@property_path, @value);
 	}
 
-	public Godot.Variant GetIndexed(Godot.NodePath @property_path)
+	public Variant GetIndexed(Godot.NodePath @property_path)
 	{
 		return _object.GetIndexed(@property_path);
 	}
@@ -189,7 +189,7 @@ public class LuaState
 		return _object.PropertyCanRevert(@property);
 	}
 
-	public Godot.Variant PropertyGetRevert(Godot.StringName @property)
+	public Variant PropertyGetRevert(Godot.StringName @property)
 	{
 		return _object.PropertyGetRevert(@property);
 	}
@@ -209,17 +209,17 @@ public class LuaState
 		return _object.GetInstanceId();
 	}
 
-	public void SetScript(Godot.Variant @script)
+	public void SetScript(Variant @script)
 	{
 		_object.SetScript(@script);
 	}
 
-	public Godot.Variant GetScript()
+	public Variant GetScript()
 	{
 		return _object.GetScript();
 	}
 
-	public void SetMeta(Godot.StringName @name, Godot.Variant @value)
+	public void SetMeta(Godot.StringName @name, Variant @value)
 	{
 		_object.SetMeta(@name, @value);
 	}
@@ -229,7 +229,7 @@ public class LuaState
 		_object.RemoveMeta(@name);
 	}
 
-	public Godot.Variant GetMeta(Godot.StringName @name, Godot.Variant @default = default)
+	public Variant GetMeta(Godot.StringName @name, Variant @default = default)
 	{
 		return _object.GetMeta(@name, @default);
 	}
@@ -239,7 +239,7 @@ public class LuaState
 		return _object.HasMeta(@name);
 	}
 
-	public Godot.Collections.Array<Godot.StringName> GetMetaList()
+	public Godot.Collections.Array<StringName> GetMetaList()
 	{
 		return _object.GetMetaList();
 	}
@@ -260,27 +260,27 @@ public class LuaState
 		_object.RemoveUserSignal(@signal);
 	}
 
-	public Godot.Error EmitSignal(Godot.StringName @signal, params Godot.Variant[] varargs)
+	public Godot.Error EmitSignal(Godot.StringName @signal, params Variant[] varargs)
 	{
 		return _object.EmitSignal(@signal, varargs);
 	}
 
-	public Godot.Variant Call(Godot.StringName @method, params Godot.Variant[] varargs)
+	public Variant Call(Godot.StringName @method, params Variant[] varargs)
 	{
 		return _object.Call(@method, varargs);
 	}
 
-	public Godot.Variant CallDeferred(Godot.StringName @method, params Godot.Variant[] varargs)
+	public Variant CallDeferred(Godot.StringName @method, params Variant[] varargs)
 	{
 		return _object.CallDeferred(@method, varargs);
 	}
 
-	public void SetDeferred(Godot.StringName @property, Godot.Variant @value)
+	public void SetDeferred(Godot.StringName @property, Variant @value)
 	{
 		_object.SetDeferred(@property, @value);
 	}
 
-	public Godot.Variant Callv(Godot.StringName @method, Godot.Collections.Array @arg_array)
+	public Variant Callv(Godot.StringName @method, Godot.Collections.Array @arg_array)
 	{
 		return _object.Callv(@method, @arg_array);
 	}

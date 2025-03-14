@@ -28,22 +28,22 @@ public class LuaTable : LuaObject
 
 	#region Methods
 
-	public Godot.Variant Get(Godot.Variant @key, Godot.Variant @default = default)
+	public Variant Get(Variant @key, Variant @default = default)
 	{
-		return (Godot.Variant)_object.Call("get", @key, @default);
+		return (Variant)_object.Call("get", @key, @default);
 	}
 
-	public void Set(Godot.Variant @key, Godot.Variant @value)
+	public void Set(Variant @key, Variant @value)
 	{
 		_object.Call("set", @key, @value);
 	}
 
-	public Godot.Variant Rawget(Godot.Variant @key, Godot.Variant @default = default)
+	public Variant Rawget(Variant @key, Variant @default = default)
 	{
-		return (Godot.Variant)_object.Call("rawget", @key, @default);
+		return (Variant)_object.Call("rawget", @key, @default);
 	}
 
-	public void Rawset(Godot.Variant @key, Godot.Variant @value)
+	public void Rawset(Variant @key, Variant @value)
 	{
 		_object.Call("rawset", @key, @value);
 	}
@@ -68,19 +68,19 @@ public class LuaTable : LuaObject
 		return (Godot.Collections.Array)_object.Call("to_array");
 	}
 
-	public bool IterInit(Godot.Variant @iter)
+	public bool IterInit(Variant @iter)
 	{
 		return (bool)_object.Call("_iter_init", @iter);
 	}
 
-	public bool IterNext(Godot.Variant @iter)
+	public bool IterNext(Variant @iter)
 	{
 		return (bool)_object.Call("_iter_next", @iter);
 	}
 
-	public Godot.Variant IterGet(Godot.Variant @iter)
+	public Variant IterGet(Variant @iter)
 	{
-		return (Godot.Variant)_object.Call("_iter_get", @iter);
+		return (Variant)_object.Call("_iter_get", @iter);
 	}
 
 	#endregion
