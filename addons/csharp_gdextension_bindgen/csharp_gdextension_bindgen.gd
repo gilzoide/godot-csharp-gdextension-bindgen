@@ -94,6 +94,7 @@ func generate_csharp_script(cls_name: StringName):
 	}).strip_edges()
 	regions.append(casts)
 	
+	# ENUMS
 	var enums = PackedStringArray()
 	for enum_name in ClassDB.class_get_enum_list(cls_name, true):
 		enums.append(_generate_enum(cls_name, enum_name))
@@ -102,6 +103,7 @@ func generate_csharp_script(cls_name: StringName):
 		regions.append("\n\n".join(enums))
 		regions.append("#endregion")
 	
+	# PROPERTIES
 	var properties = PackedStringArray()
 	for property in ClassDB.class_get_property_list(cls_name, true):
 		if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
@@ -124,6 +126,7 @@ func generate_csharp_script(cls_name: StringName):
 		regions.append("\n\n".join(inherited_properties))
 		regions.append("#endregion")
 	
+	# METHODS
 	var methods = PackedStringArray()
 	for method in ClassDB.class_get_method_list(cls_name, true):
 		if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
@@ -146,12 +149,23 @@ func generate_csharp_script(cls_name: StringName):
 		regions.append("\n\n".join(inherited_methods))
 		regions.append("#endregion")
 	
+	# SIGNALS
 	var signals = PackedStringArray()
-	for sig in ClassDB.class_get_signal_list(cls_name, no_inheritance):
+	for sig in ClassDB.class_get_signal_list(cls_name, true):
 		signals.append(_generate_signal(cls_name, sig))
 	if not signals.is_empty():
 		regions.append("#region Signals")
 		regions.append("\n\n".join(signals))
+		regions.append("#endregion")
+	
+	var inherited_signals = PackedStringArray()
+	if not parent_class_is_extension:
+		for inherited_class in _get_parent_classes(cls_name):
+			for method in ClassDB.class_get_signal_list(inherited_class, true):
+				inherited_signals.append(_generate_signal(inherited_class, method))
+	if not inherited_signals.is_empty():
+		regions.append("#region Inherited Signals")
+		regions.append("\n\n".join(inherited_signals))
 		regions.append("#endregion")
 	
 	var code = """

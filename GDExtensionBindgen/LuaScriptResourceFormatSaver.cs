@@ -306,7 +306,7 @@ public class LuaScriptResourceFormatSaver
 
 	#endregion
 
-	#region Signals
+	#region Inherited Signals
 
 	public event Action ScriptChanged
 	{

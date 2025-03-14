@@ -539,7 +539,7 @@ public class LuaScript
 
 	#endregion
 
-	#region Signals
+	#region Inherited Signals
 
 	public event Action Changed
 	{
