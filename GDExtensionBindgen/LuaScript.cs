@@ -538,4 +538,56 @@ public class LuaScript
 	}
 
 	#endregion
+
+	#region Signals
+
+	public event Action Changed
+	{
+		add
+		{
+			Connect("changed", Callable.From(value));
+		}
+		remove
+		{
+			Disconnect("changed", Callable.From(value));
+		}
+	}
+
+	public event Action SetupLocalToSceneRequested
+	{
+		add
+		{
+			Connect("setup_local_to_scene_requested", Callable.From(value));
+		}
+		remove
+		{
+			Disconnect("setup_local_to_scene_requested", Callable.From(value));
+		}
+	}
+
+	public event Action ScriptChanged
+	{
+		add
+		{
+			Connect("script_changed", Callable.From(value));
+		}
+		remove
+		{
+			Disconnect("script_changed", Callable.From(value));
+		}
+	}
+
+	public event Action PropertyListChanged
+	{
+		add
+		{
+			Connect("property_list_changed", Callable.From(value));
+		}
+		remove
+		{
+			Disconnect("property_list_changed", Callable.From(value));
+		}
+	}
+
+	#endregion
 }

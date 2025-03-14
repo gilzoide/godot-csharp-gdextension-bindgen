@@ -305,4 +305,32 @@ public class LuaScriptResourceFormatSaver
 	}
 
 	#endregion
+
+	#region Signals
+
+	public event Action ScriptChanged
+	{
+		add
+		{
+			Connect("script_changed", Callable.From(value));
+		}
+		remove
+		{
+			Disconnect("script_changed", Callable.From(value));
+		}
+	}
+
+	public event Action PropertyListChanged
+	{
+		add
+		{
+			Connect("property_list_changed", Callable.From(value));
+		}
+		remove
+		{
+			Disconnect("property_list_changed", Callable.From(value));
+		}
+	}
+
+	#endregion
 }

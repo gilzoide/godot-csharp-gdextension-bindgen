@@ -12,6 +12,6 @@ WIP C# bindings generator for GDExtension classes
 ## TODO
 - [ ] support constant integers that are not part of any enum
 - [ ] get/set properties inherited from engine class directly without Get/Set
-- [ ] support signals
+- [X] support signals
 - [ ] submit to the Asset Library
 - [ ] cache StringNames

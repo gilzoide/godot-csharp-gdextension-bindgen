@@ -5,7 +5,7 @@ using GDExtensionBindgen;
 public partial class GDExtensionTest : Node
 {
 	private LuaState lua = new LuaState();
-	
+
 	public override void _Ready()
 	{
 		lua.OpenLibraries();
