@@ -47,7 +47,7 @@ public class LuaScriptResourceFormatSaver
 
 	#region Inherited Enums
 
-	public enum ConnectFlagsEnum : long
+	public enum ConnectFlags : long
 	{
 		ConnectDeferred = 1L,
 		ConnectPersist = 2L,

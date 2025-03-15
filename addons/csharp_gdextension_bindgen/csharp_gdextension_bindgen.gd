@@ -269,7 +269,7 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 
 	return """
 		{flags}
-		public enum {enum_name}Enum : long
+		public enum {enum_name}{maybe_enum_suffix} : long
 		{
 		{constants}
 		}
@@ -277,6 +277,7 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 		flags = "[Flags]" if ClassDB.is_class_enum_bitfield(cls_name, enum_name) else "",
 		enum_name = enum_name,
 		constants = "\n".join(constants).indent("\t"),
+		maybe_enum_suffix = "" if enum_name.ends_with("Flags") else "Enum",
 	}).strip_edges()
 
 
