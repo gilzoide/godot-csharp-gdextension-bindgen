@@ -46,15 +46,15 @@ public class LuaCoroutine : LuaObject
 
 	#region Enums
 
-	public enum LuaCoroutineStatusEnum
+	public enum LuaCoroutineStatusEnum : long
 	{
-		StatusOk = 0,
-		StatusYield = 1,
-		StatusErrrun = 2,
-		StatusErrsyntax = 3,
-		StatusErrmem = 4,
-		StatusErrerr = 5,
-		StatusDead = -1,
+		StatusOk = 0L,
+		StatusYield = 1L,
+		StatusErrrun = 2L,
+		StatusErrsyntax = 3L,
+		StatusErrmem = 4L,
+		StatusErrerr = 5L,
+		StatusDead = -1L,
 	}
 
 	#endregion

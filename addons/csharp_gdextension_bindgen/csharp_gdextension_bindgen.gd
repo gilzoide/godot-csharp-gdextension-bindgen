@@ -234,11 +234,11 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 	var constants = PackedStringArray()
 	for constant_name in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
 		var constant_value = ClassDB.class_get_integer_constant(cls_name, constant_name)
-		constants.append(constant_name.to_pascal_case() + " = " + str(constant_value) + ",")
+		constants.append(constant_name.to_pascal_case() + " = " + str(constant_value) + "L,")
 
 	return """
 		{flags}
-		public enum {enum_name}Enum
+		public enum {enum_name}Enum : long
 		{
 		{constants}
 		}

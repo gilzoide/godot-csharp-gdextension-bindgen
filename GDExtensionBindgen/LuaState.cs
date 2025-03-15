@@ -56,28 +56,28 @@ public class LuaState
 	#region Enums
 
 	[Flags]
-	public enum LibraryEnum
+	public enum LibraryEnum : long
 	{
-		LuaBase = 1,
-		LuaPackage = 2,
-		LuaCoroutine = 4,
-		LuaString = 8,
-		LuaOs = 16,
-		LuaMath = 32,
-		LuaTable = 64,
-		LuaDebug = 128,
-		LuaBit32 = 256,
-		LuaIo = 512,
-		LuaFfi = 1024,
-		LuaJit = 2048,
-		LuaUtf8 = 4096,
-		LuaAllLibs = 8191,
-		GodotVariant = 8192,
-		GodotUtilityFunctions = 16384,
-		GodotSingletons = 32768,
-		GodotClasses = 65536,
-		GodotEnums = 131072,
-		GodotAllLibs = 253952,
+		LuaBase = 1L,
+		LuaPackage = 2L,
+		LuaCoroutine = 4L,
+		LuaString = 8L,
+		LuaOs = 16L,
+		LuaMath = 32L,
+		LuaTable = 64L,
+		LuaDebug = 128L,
+		LuaBit32 = 256L,
+		LuaIo = 512L,
+		LuaFfi = 1024L,
+		LuaJit = 2048L,
+		LuaUtf8 = 4096L,
+		LuaAllLibs = 8191L,
+		GodotVariant = 8192L,
+		GodotUtilityFunctions = 16384L,
+		GodotSingletons = 32768L,
+		GodotClasses = 65536L,
+		GodotEnums = 131072L,
+		GodotAllLibs = 253952L,
 	}
 
 	#endregion

@@ -51,16 +51,16 @@ public class LuaError
 
 	#region Enums
 
-	public enum StatusEnum
+	public enum StatusEnum : long
 	{
-		Ok = 0,
-		Yielded = 1,
-		Runtime = 2,
-		Memory = 4,
-		Handler = 5,
-		Gc = 7,
-		Syntax = 3,
-		File = 6,
+		Ok = 0L,
+		Yielded = 1L,
+		Runtime = 2L,
+		Memory = 4L,
+		Handler = 5L,
+		Gc = 7L,
+		Syntax = 3L,
+		File = 6L,
 	}
 
 	#endregion
