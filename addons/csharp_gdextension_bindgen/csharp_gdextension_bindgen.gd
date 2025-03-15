@@ -5,8 +5,6 @@
 ##
 ## Use the "Project -> Tools -> Generate C# GDExtension Bindings" menu item to
 ## generate C# bindings from GDExtension.
-##
-## TODO: support constant integers that are not part of any enum
 @tool
 extends EditorPlugin
 
@@ -101,6 +99,21 @@ func generate_csharp_script(cls_name: StringName):
 	var enums = PackedStringArray()
 	for enum_name in ClassDB.class_get_enum_list(cls_name, true):
 		enums.append(_generate_enum(cls_name, enum_name))
+	
+	# INTEGER CONSTANTS
+	var integer_constants = PackedStringArray()
+	for constant_name in ClassDB.class_get_integer_constant_list(cls_name, true):
+		if not ClassDB.class_get_integer_constant_enum(cls_name, constant_name, true).is_empty():
+			continue
+		integer_constants.append(_generate_integer_constant(cls_name, constant_name))
+
+	var inherited_integer_constants = PackedStringArray()
+	if not parent_class_is_extension:
+		for inherited_class in _get_parent_classes(cls_name):
+			for constant_name in ClassDB.class_get_integer_constant_list(inherited_class, true):
+				if not ClassDB.class_get_integer_constant_enum(cls_name, constant_name, true).is_empty():
+					continue
+				inherited_integer_constants.append(_generate_integer_constant(inherited_class, constant_name))
 
 	# PROPERTIES
 	var properties = PackedStringArray()
@@ -160,6 +173,14 @@ func generate_csharp_script(cls_name: StringName):
 	if not enums.is_empty():
 		regions.append("#region Enums")
 		regions.append("\n\n".join(enums))
+		regions.append("#endregion")
+	if not integer_constants.is_empty():
+		regions.append("#region Integer Constants")
+		regions.append("\n\n".join(integer_constants))
+		regions.append("#endregion")
+	if not inherited_integer_constants.is_empty():
+		regions.append("#region Inherited Integer Constants")
+		regions.append("\n\n".join(inherited_integer_constants))
 		regions.append("#endregion")
 	if not properties.is_empty():
 		regions.append("#region Properties")
@@ -247,6 +268,13 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 		enum_name = enum_name,
 		constants = "\n".join(constants).indent("\t"),
 	}).strip_edges()
+
+
+static func _generate_integer_constant(cls_name: StringName, constant_name: StringName) -> String:
+	return "public const long {csharp_constant_name} = {constant_value}L;".format({
+		csharp_constant_name = constant_name.to_pascal_case(),
+		constant_value = ClassDB.class_get_integer_constant(cls_name, constant_name),
+	})
 
 
 static func _generate_property(cls_name: StringName, property: Dictionary) -> String:

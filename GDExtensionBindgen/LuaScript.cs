@@ -45,6 +45,24 @@ public class LuaScript
 
 	private static readonly StringName NativeName = "LuaScript";
 
+	#region Inherited Integer Constants
+
+	public const long NotificationPostinitialize = 0L;
+
+	public const long NotificationPredelete = 1L;
+
+	public const long NotificationExtensionReloaded = 2L;
+
+	public const long ConnectDeferred = 1L;
+
+	public const long ConnectPersist = 2L;
+
+	public const long ConnectOneShot = 4L;
+
+	public const long ConnectReferenceCounted = 8L;
+
+	#endregion
+
 	#region Inherited Properties
 
 	public string SourceCode
