@@ -45,83 +45,72 @@ public class LuaScriptLanguage
 
 	private static readonly StringName NativeName = "LuaScriptLanguage";
 
+	#region Inherited Enums
+
+	public enum LookupResultTypeEnum : long
+	{
+		LookupResultScriptLocation = 0L,
+		LookupResultClass = 1L,
+		LookupResultClassConstant = 2L,
+		LookupResultClassProperty = 3L,
+		LookupResultClassMethod = 4L,
+		LookupResultClassSignal = 5L,
+		LookupResultClassEnum = 6L,
+		LookupResultClassTbdGlobalscope = 7L,
+		LookupResultClassAnnotation = 8L,
+		LookupResultLocalConstant = 9L,
+		LookupResultLocalVariable = 10L,
+		LookupResultMax = 11L,
+	}
+
+	public enum CodeCompletionLocationEnum : long
+	{
+		LocationLocal = 0L,
+		LocationParentMask = 256L,
+		LocationOtherUserCode = 512L,
+		LocationOther = 1024L,
+	}
+
+	public enum CodeCompletionKindEnum : long
+	{
+		CodeCompletionKindClass = 0L,
+		CodeCompletionKindFunction = 1L,
+		CodeCompletionKindSignal = 2L,
+		CodeCompletionKindVariable = 3L,
+		CodeCompletionKindMember = 4L,
+		CodeCompletionKindEnum = 5L,
+		CodeCompletionKindConstant = 6L,
+		CodeCompletionKindNodePath = 7L,
+		CodeCompletionKindFilePath = 8L,
+		CodeCompletionKindPlainText = 9L,
+		CodeCompletionKindMax = 10L,
+	}
+
+	public enum ScriptNameCasingEnum : long
+	{
+		ScriptNameCasingAuto = 0L,
+		ScriptNameCasingPascalCase = 1L,
+		ScriptNameCasingSnakeCase = 2L,
+		ScriptNameCasingKebabCase = 3L,
+	}
+
+	public enum ConnectFlagsEnum : long
+	{
+		ConnectDeferred = 1L,
+		ConnectPersist = 2L,
+		ConnectOneShot = 4L,
+		ConnectReferenceCounted = 8L,
+	}
+
+	#endregion
+
 	#region Inherited Integer Constants
-
-	public const long LookupResultScriptLocation = 0L;
-
-	public const long LookupResultClass = 1L;
-
-	public const long LookupResultClassConstant = 2L;
-
-	public const long LookupResultClassProperty = 3L;
-
-	public const long LookupResultClassMethod = 4L;
-
-	public const long LookupResultClassSignal = 5L;
-
-	public const long LookupResultClassEnum = 6L;
-
-	public const long LookupResultClassTbdGlobalscope = 7L;
-
-	public const long LookupResultClassAnnotation = 8L;
-
-	public const long LookupResultLocalConstant = 9L;
-
-	public const long LookupResultLocalVariable = 10L;
-
-	public const long LookupResultMax = 11L;
-
-	public const long LocationLocal = 0L;
-
-	public const long LocationParentMask = 256L;
-
-	public const long LocationOtherUserCode = 512L;
-
-	public const long LocationOther = 1024L;
-
-	public const long CodeCompletionKindClass = 0L;
-
-	public const long CodeCompletionKindFunction = 1L;
-
-	public const long CodeCompletionKindSignal = 2L;
-
-	public const long CodeCompletionKindVariable = 3L;
-
-	public const long CodeCompletionKindMember = 4L;
-
-	public const long CodeCompletionKindEnum = 5L;
-
-	public const long CodeCompletionKindConstant = 6L;
-
-	public const long CodeCompletionKindNodePath = 7L;
-
-	public const long CodeCompletionKindFilePath = 8L;
-
-	public const long CodeCompletionKindPlainText = 9L;
-
-	public const long CodeCompletionKindMax = 10L;
-
-	public const long ScriptNameCasingAuto = 0L;
-
-	public const long ScriptNameCasingPascalCase = 1L;
-
-	public const long ScriptNameCasingSnakeCase = 2L;
-
-	public const long ScriptNameCasingKebabCase = 3L;
 
 	public const long NotificationPostinitialize = 0L;
 
 	public const long NotificationPredelete = 1L;
 
 	public const long NotificationExtensionReloaded = 2L;
-
-	public const long ConnectDeferred = 1L;
-
-	public const long ConnectPersist = 2L;
-
-	public const long ConnectOneShot = 4L;
-
-	public const long ConnectReferenceCounted = 8L;
 
 	#endregion
 

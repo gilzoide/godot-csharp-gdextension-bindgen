@@ -46,6 +46,18 @@ public class LuaObject
 
 	private static readonly StringName NativeName = "LuaObject";
 
+	#region Inherited Enums
+
+	public enum ConnectFlagsEnum : long
+	{
+		ConnectDeferred = 1L,
+		ConnectPersist = 2L,
+		ConnectOneShot = 4L,
+		ConnectReferenceCounted = 8L,
+	}
+
+	#endregion
+
 	#region Inherited Integer Constants
 
 	public const long NotificationPostinitialize = 0L;
@@ -53,14 +65,6 @@ public class LuaObject
 	public const long NotificationPredelete = 1L;
 
 	public const long NotificationExtensionReloaded = 2L;
-
-	public const long ConnectDeferred = 1L;
-
-	public const long ConnectPersist = 2L;
-
-	public const long ConnectOneShot = 4L;
-
-	public const long ConnectReferenceCounted = 8L;
 
 	#endregion
 
