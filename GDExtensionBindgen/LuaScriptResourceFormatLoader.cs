@@ -49,19 +49,19 @@ public class LuaScriptResourceFormatLoader
 
 	public enum CacheModeEnum : long
 	{
-		CacheModeIgnore = 0L,
-		CacheModeReuse = 1L,
-		CacheModeReplace = 2L,
-		CacheModeIgnoreDeep = 3L,
-		CacheModeReplaceDeep = 4L,
+		Ignore = 0L,
+		Reuse = 1L,
+		Replace = 2L,
+		IgnoreDeep = 3L,
+		ReplaceDeep = 4L,
 	}
 
 	public enum ConnectFlags : long
 	{
-		ConnectDeferred = 1L,
-		ConnectPersist = 2L,
-		ConnectOneShot = 4L,
-		ConnectReferenceCounted = 8L,
+		Deferred = 1L,
+		Persist = 2L,
+		OneShot = 4L,
+		ReferenceCounted = 8L,
 	}
 
 	#endregion

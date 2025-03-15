@@ -49,57 +49,57 @@ public class LuaScriptLanguage
 
 	public enum LookupResultTypeEnum : long
 	{
-		LookupResultScriptLocation = 0L,
-		LookupResultClass = 1L,
-		LookupResultClassConstant = 2L,
-		LookupResultClassProperty = 3L,
-		LookupResultClassMethod = 4L,
-		LookupResultClassSignal = 5L,
-		LookupResultClassEnum = 6L,
-		LookupResultClassTbdGlobalscope = 7L,
-		LookupResultClassAnnotation = 8L,
-		LookupResultLocalConstant = 9L,
-		LookupResultLocalVariable = 10L,
-		LookupResultMax = 11L,
+		ScriptLocation = 0L,
+		Class = 1L,
+		ClassConstant = 2L,
+		ClassProperty = 3L,
+		ClassMethod = 4L,
+		ClassSignal = 5L,
+		ClassEnum = 6L,
+		ClassTbdGlobalscope = 7L,
+		ClassAnnotation = 8L,
+		LocalConstant = 9L,
+		LocalVariable = 10L,
+		Max = 11L,
 	}
 
 	public enum CodeCompletionLocationEnum : long
 	{
-		LocationLocal = 0L,
-		LocationParentMask = 256L,
-		LocationOtherUserCode = 512L,
-		LocationOther = 1024L,
+		Local = 0L,
+		ParentMask = 256L,
+		OtherUserCode = 512L,
+		Other = 1024L,
 	}
 
 	public enum CodeCompletionKindEnum : long
 	{
-		CodeCompletionKindClass = 0L,
-		CodeCompletionKindFunction = 1L,
-		CodeCompletionKindSignal = 2L,
-		CodeCompletionKindVariable = 3L,
-		CodeCompletionKindMember = 4L,
-		CodeCompletionKindEnum = 5L,
-		CodeCompletionKindConstant = 6L,
-		CodeCompletionKindNodePath = 7L,
-		CodeCompletionKindFilePath = 8L,
-		CodeCompletionKindPlainText = 9L,
-		CodeCompletionKindMax = 10L,
+		Class = 0L,
+		Function = 1L,
+		Signal = 2L,
+		Variable = 3L,
+		Member = 4L,
+		Enum = 5L,
+		Constant = 6L,
+		NodePath = 7L,
+		FilePath = 8L,
+		PlainText = 9L,
+		Max = 10L,
 	}
 
 	public enum ScriptNameCasingEnum : long
 	{
-		ScriptNameCasingAuto = 0L,
-		ScriptNameCasingPascalCase = 1L,
-		ScriptNameCasingSnakeCase = 2L,
-		ScriptNameCasingKebabCase = 3L,
+		Auto = 0L,
+		PascalCase = 1L,
+		SnakeCase = 2L,
+		KebabCase = 3L,
 	}
 
 	public enum ConnectFlags : long
 	{
-		ConnectDeferred = 1L,
-		ConnectPersist = 2L,
-		ConnectOneShot = 4L,
-		ConnectReferenceCounted = 8L,
+		Deferred = 1L,
+		Persist = 2L,
+		OneShot = 4L,
+		ReferenceCounted = 8L,
 	}
 
 	#endregion

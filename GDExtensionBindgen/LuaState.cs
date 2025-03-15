@@ -86,10 +86,10 @@ public class LuaState
 
 	public enum ConnectFlags : long
 	{
-		ConnectDeferred = 1L,
-		ConnectPersist = 2L,
-		ConnectOneShot = 4L,
-		ConnectReferenceCounted = 8L,
+		Deferred = 1L,
+		Persist = 2L,
+		OneShot = 4L,
+		ReferenceCounted = 8L,
 	}
 
 	#endregion

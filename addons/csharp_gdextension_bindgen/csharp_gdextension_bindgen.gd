@@ -262,10 +262,19 @@ func _run():
 
 
 static func _generate_enum(cls_name: StringName, enum_name: StringName) -> String:
+	var common_prefix = null
+	for constant_name in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
+		if common_prefix == null:
+			common_prefix = constant_name
+		else:
+			common_prefix = _get_common_prefix(common_prefix, constant_name)
+	
 	var constants = PackedStringArray()
 	for constant_name in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
-		var constant_value = ClassDB.class_get_integer_constant(cls_name, constant_name)
-		constants.append(constant_name.to_pascal_case() + " = " + str(constant_value) + "L,")
+		constants.append("{csharp_constant_name} = {constant_value}L,".format({
+			csharp_constant_name = constant_name.substr(common_prefix.length()).to_pascal_case(),
+			constant_value = ClassDB.class_get_integer_constant(cls_name, constant_name),
+		}))
 
 	return """
 		{flags}
@@ -630,3 +639,11 @@ static func _generate_strings_class(cls_name: StringName, string_name_type: Stri
 		parent_class = parent_class,
 		strings_class = StringNameTypeName[string_name_type],
 	}).strip_edges()
+
+
+static func _get_common_prefix(s1: String, s2: String) -> String:
+	var common_length = min(s1.length(), s2.length())
+	for i in range(common_length):
+		if s1[i] != s2[i]:
+			return s1.substr(0, i)
+	return s1.substr(0, common_length)
