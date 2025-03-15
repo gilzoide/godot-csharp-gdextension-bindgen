@@ -7,9 +7,7 @@ namespace GDExtensionBindgen;
 
 public class LuaUserdata : LuaTable
 {
-	public new static readonly StringName ClassName = "LuaUserdata";
-
-	public LuaUserdata() : base(ClassName)
+	public LuaUserdata() : base(NativeName)
 	{
 	}
 	protected LuaUserdata(StringName @class) : base(@class)
@@ -25,4 +23,21 @@ public class LuaUserdata : LuaTable
 	public static implicit operator RefCounted(LuaUserdata self) => self?._object;
 	public static implicit operator Variant(LuaUserdata self) => self?._object;
 	public static explicit operator LuaUserdata(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
+
+	public new class PropertyName : LuaTable.PropertyName
+	{
+
+	}
+
+	public new class MethodName : LuaTable.MethodName
+	{
+
+	}
+
+	public new class SignalName : LuaTable.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaUserdata";
 }

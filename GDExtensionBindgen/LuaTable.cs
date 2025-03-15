@@ -7,9 +7,7 @@ namespace GDExtensionBindgen;
 
 public class LuaTable : LuaObject
 {
-	public new static readonly StringName ClassName = "LuaTable";
-
-	public LuaTable() : base(ClassName)
+	public LuaTable() : base(NativeName)
 	{
 	}
 	protected LuaTable(StringName @class) : base(@class)
@@ -26,61 +24,86 @@ public class LuaTable : LuaObject
 	public static implicit operator Variant(LuaTable self) => self?._object;
 	public static explicit operator LuaTable(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
+	public new class PropertyName : LuaObject.PropertyName
+	{
+
+	}
+
+	public new class MethodName : LuaObject.MethodName
+	{
+		public static readonly StringName Rawget = "rawget";
+		public static readonly StringName Rawset = "rawset";
+		public static readonly StringName Clear = "clear";
+		public static readonly StringName Length = "length";
+		public static readonly StringName ToDictionary = "to_dictionary";
+		public static readonly StringName ToArray = "to_array";
+		public static readonly StringName IterInit = "_iter_init";
+		public static readonly StringName IterNext = "_iter_next";
+		public static readonly StringName IterGet = "_iter_get";
+	}
+
+	public new class SignalName : LuaObject.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaTable";
+
 	#region Methods
 
 	public Variant Get(Variant @key, Variant @default = default)
 	{
-		return (Variant)_object.Call("get", @key, @default);
+		return (Variant)_object.Call(MethodName.Get, @key, @default);
 	}
 
 	public void Set(Variant @key, Variant @value)
 	{
-		_object.Call("set", @key, @value);
+		_object.Call(MethodName.Set, @key, @value);
 	}
 
 	public Variant Rawget(Variant @key, Variant @default = default)
 	{
-		return (Variant)_object.Call("rawget", @key, @default);
+		return (Variant)_object.Call(MethodName.Rawget, @key, @default);
 	}
 
 	public void Rawset(Variant @key, Variant @value)
 	{
-		_object.Call("rawset", @key, @value);
+		_object.Call(MethodName.Rawset, @key, @value);
 	}
 
 	public void Clear()
 	{
-		_object.Call("clear");
+		_object.Call(MethodName.Clear);
 	}
 
 	public int Length()
 	{
-		return (int)_object.Call("length");
+		return (int)_object.Call(MethodName.Length);
 	}
 
 	public Godot.Collections.Dictionary ToDictionary()
 	{
-		return (Godot.Collections.Dictionary)_object.Call("to_dictionary");
+		return (Godot.Collections.Dictionary)_object.Call(MethodName.ToDictionary);
 	}
 
 	public Godot.Collections.Array ToArray()
 	{
-		return (Godot.Collections.Array)_object.Call("to_array");
+		return (Godot.Collections.Array)_object.Call(MethodName.ToArray);
 	}
 
 	public bool IterInit(Variant @iter)
 	{
-		return (bool)_object.Call("_iter_init", @iter);
+		return (bool)_object.Call(MethodName.IterInit, @iter);
 	}
 
 	public bool IterNext(Variant @iter)
 	{
-		return (bool)_object.Call("_iter_next", @iter);
+		return (bool)_object.Call(MethodName.IterNext, @iter);
 	}
 
 	public Variant IterGet(Variant @iter)
 	{
-		return (Variant)_object.Call("_iter_get", @iter);
+		return (Variant)_object.Call(MethodName.IterGet, @iter);
 	}
 
 	#endregion

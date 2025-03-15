@@ -7,11 +7,10 @@ namespace GDExtensionBindgen;
 
 public class LuaScript
 {
-	public static readonly StringName ClassName = "LuaScript";
-
+	// Engine object used for calling engine methods
 	protected ScriptExtension _object;
 
-	public LuaScript() : this(ClassName)
+	public LuaScript() : this(NativeName)
 	{
 	}
 	protected LuaScript(StringName @class) : this(ClassDB.Instantiate(@class))
@@ -28,6 +27,23 @@ public class LuaScript
 	public static implicit operator ScriptExtension(LuaScript self) => self?._object;
 	public static implicit operator Variant(LuaScript self) => self?._object;
 	public static explicit operator LuaScript(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
+
+	public class PropertyName : ScriptExtension.PropertyName
+	{
+
+	}
+
+	public class MethodName : ScriptExtension.MethodName
+	{
+		public static readonly StringName New = "new";
+	}
+
+	public class SignalName : ScriptExtension.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaScript";
 
 	#region Inherited Properties
 
@@ -67,7 +83,7 @@ public class LuaScript
 
 	public Variant New(params Variant[] varargs)
 	{
-		return (Variant)_object.Call("new", varargs);
+		return (Variant)_object.Call(MethodName.New, varargs);
 	}
 
 	#endregion
@@ -545,11 +561,11 @@ public class LuaScript
 	{
 		add
 		{
-			Connect("changed", Callable.From(value));
+			Connect(SignalName.Changed, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("changed", Callable.From(value));
+			Disconnect(SignalName.Changed, Callable.From(value));
 		}
 	}
 
@@ -557,11 +573,11 @@ public class LuaScript
 	{
 		add
 		{
-			Connect("setup_local_to_scene_requested", Callable.From(value));
+			Connect(SignalName.SetupLocalToSceneRequested, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("setup_local_to_scene_requested", Callable.From(value));
+			Disconnect(SignalName.SetupLocalToSceneRequested, Callable.From(value));
 		}
 	}
 
@@ -569,11 +585,11 @@ public class LuaScript
 	{
 		add
 		{
-			Connect("script_changed", Callable.From(value));
+			Connect(SignalName.ScriptChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("script_changed", Callable.From(value));
+			Disconnect(SignalName.ScriptChanged, Callable.From(value));
 		}
 	}
 
@@ -581,11 +597,11 @@ public class LuaScript
 	{
 		add
 		{
-			Connect("property_list_changed", Callable.From(value));
+			Connect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("property_list_changed", Callable.From(value));
+			Disconnect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 	}
 

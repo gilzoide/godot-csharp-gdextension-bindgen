@@ -14,4 +14,4 @@ WIP C# bindings generator for GDExtension classes
 - [X] get/set properties inherited from engine class directly without Get/Set
 - [X] support signals
 - [ ] submit to the Asset Library
-- [ ] cache StringNames
+- [X] cache StringNames

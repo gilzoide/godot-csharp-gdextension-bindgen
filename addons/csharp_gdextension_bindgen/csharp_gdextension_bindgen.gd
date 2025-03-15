@@ -7,7 +7,6 @@
 ## generate C# bindings from GDExtension.
 ##
 ## TODO: support constant integers that are not part of any enum
-## TODO: cache StringNames used by class
 @tool
 extends EditorPlugin
 
@@ -15,6 +14,17 @@ extends EditorPlugin
 const MENU_ITEM_NAME = "Generate C# GDExtension Bindings"
 const GENERATED_NAMESPACE = "GDExtensionBindgen"
 const GENERATED_SCRIPTS_FOLDER = "res://GDExtensionBindgen"
+
+enum StringNameType {
+	PROPERTY_NAME,
+	METHOD_NAME,
+	SIGNAL_NAME,
+}
+const StringNameTypeName = {
+	StringNameType.PROPERTY_NAME: "PropertyName",
+	StringNameType.METHOD_NAME: "MethodName",
+	StringNameType.SIGNAL_NAME: "SignalName",
+}
 
 
 func _enter_tree():
@@ -26,7 +36,6 @@ func _exit_tree():
 
 
 func generate_csharp_script(cls_name: StringName):
-	var class_is_extension = _is_extension_class(cls_name)
 	var class_is_editor_only = _is_editor_extension_class(cls_name)
 	var parent_class = ClassDB.get_parent_class(cls_name)
 	var parent_class_is_extension = _is_extension_class(parent_class)
@@ -35,21 +44,15 @@ func generate_csharp_script(cls_name: StringName):
 
 	var regions = PackedStringArray()
 
-	# StringName cache for class name
-	regions.append("public {maybe_new}static readonly StringName ClassName = \"{cls_name}\";".format({
-		cls_name = cls_name,
-		maybe_new = "new " if parent_class_is_extension else "",
-	}))
-
 	# Engine object used for calling engine methods
 	if not parent_class_is_extension:
-		regions.append("protected %s _object;" % parent_class)
+		regions.append("// Engine object used for calling engine methods\nprotected %s _object;" % parent_class)
 
 	# Constructors
 	var ctor_fmt
 	if parent_class_is_extension:
 		ctor_fmt = """
-			public {cls_name}() : base(ClassName)
+			public {cls_name}() : base(NativeName)
 			{
 			}
 			protected {cls_name}(StringName @class) : base(@class)
@@ -64,7 +67,7 @@ func generate_csharp_script(cls_name: StringName):
 		"""
 	else:
 		ctor_fmt = """
-			public {cls_name}() : this(ClassName)
+			public {cls_name}() : this(NativeName)
 			{
 			}
 			protected {cls_name}(StringName @class) : this(ClassDB.Instantiate(@class))
@@ -98,21 +101,15 @@ func generate_csharp_script(cls_name: StringName):
 	var enums = PackedStringArray()
 	for enum_name in ClassDB.class_get_enum_list(cls_name, true):
 		enums.append(_generate_enum(cls_name, enum_name))
-	if not enums.is_empty():
-		regions.append("#region Enums")
-		regions.append("\n\n".join(enums))
-		regions.append("#endregion")
 
 	# PROPERTIES
 	var properties = PackedStringArray()
+	var property_names = PackedStringArray()
 	for property in ClassDB.class_get_property_list(cls_name, true):
 		if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
 			continue
+		property_names.append(property["name"])
 		properties.append(_generate_property(cls_name, property))
-	if not properties.is_empty():
-		regions.append("#region Properties")
-		regions.append("\n\n".join(properties))
-		regions.append("#endregion")
 
 	var inherited_properties = PackedStringArray()
 	if not parent_class_is_extension:
@@ -121,21 +118,15 @@ func generate_csharp_script(cls_name: StringName):
 				if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
 					continue
 				inherited_properties.append(_generate_property(inherited_class, property))
-	if not inherited_properties.is_empty():
-		regions.append("#region Inherited Properties")
-		regions.append("\n\n".join(inherited_properties))
-		regions.append("#endregion")
 
 	# METHODS
 	var methods = PackedStringArray()
+	var method_names = PackedStringArray()
 	for method in ClassDB.class_get_method_list(cls_name, true):
 		if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
 			continue
+		method_names.append(method["name"])
 		methods.append(_generate_method(cls_name, method))
-	if not methods.is_empty():
-		regions.append("#region Methods")
-		regions.append("\n\n".join(methods))
-		regions.append("#endregion")
 
 	var inherited_methods = PackedStringArray()
 	if not parent_class_is_extension:
@@ -144,25 +135,52 @@ func generate_csharp_script(cls_name: StringName):
 				if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
 					continue
 				inherited_methods.append(_generate_method(inherited_class, method))
-	if not inherited_methods.is_empty():
-		regions.append("#region Inherited Methods")
-		regions.append("\n\n".join(inherited_methods))
-		regions.append("#endregion")
 
 	# SIGNALS
 	var signals = PackedStringArray()
+	var signal_names = PackedStringArray()
 	for sig in ClassDB.class_get_signal_list(cls_name, true):
+		signal_names.append(sig["name"])
 		signals.append(_generate_signal(cls_name, sig))
-	if not signals.is_empty():
-		regions.append("#region Signals")
-		regions.append("\n\n".join(signals))
-		regions.append("#endregion")
 
 	var inherited_signals = PackedStringArray()
 	if not parent_class_is_extension:
 		for inherited_class in _get_parent_classes(cls_name):
 			for method in ClassDB.class_get_signal_list(inherited_class, true):
 				inherited_signals.append(_generate_signal(inherited_class, method))
+
+	# StringName caches
+	regions.append(_generate_strings_class(cls_name, StringNameType.PROPERTY_NAME, property_names))
+	regions.append(_generate_strings_class(cls_name, StringNameType.METHOD_NAME, method_names))
+	regions.append(_generate_strings_class(cls_name, StringNameType.SIGNAL_NAME, signal_names))
+	regions.append("private static readonly StringName NativeName = \"{cls_name}\";".format({
+		cls_name = cls_name,
+	}))
+
+	if not enums.is_empty():
+		regions.append("#region Enums")
+		regions.append("\n\n".join(enums))
+		regions.append("#endregion")
+	if not properties.is_empty():
+		regions.append("#region Properties")
+		regions.append("\n\n".join(properties))
+		regions.append("#endregion")
+	if not inherited_properties.is_empty():
+		regions.append("#region Inherited Properties")
+		regions.append("\n\n".join(inherited_properties))
+		regions.append("#endregion")
+	if not methods.is_empty():
+		regions.append("#region Methods")
+		regions.append("\n\n".join(methods))
+		regions.append("#endregion")
+	if not inherited_methods.is_empty():
+		regions.append("#region Inherited Methods")
+		regions.append("\n\n".join(inherited_methods))
+		regions.append("#endregion")
+	if not signals.is_empty():
+		regions.append("#region Signals")
+		regions.append("\n\n".join(signals))
+		regions.append("#endregion")
 	if not inherited_signals.is_empty():
 		regions.append("#region Inherited Signals")
 		regions.append("\n\n".join(inherited_signals))
@@ -241,9 +259,9 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 	var getter = ClassDB.class_get_property_getter(cls_name, property_name)
 	if getter:
 		if _is_extension_class(cls_name):
-			getset.append("get => {get_cast}_object.Get(\"{property_name}\");".format({
+			getset.append("get => {get_cast}_object.Get(PropertyName.{csharp_property_name});".format({
 				get_cast = _property_get_cast(property),
-				property_name = property_name,
+				csharp_property_name = csharp_property_name,
 			}))
 		else:
 			getset.append("get => _object.{csharp_property_name};".format({
@@ -253,9 +271,9 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 	var setter = ClassDB.class_get_property_setter(cls_name, property_name)
 	if setter:
 		if _is_extension_class(cls_name):
-			getset.append("set => _object.Set(\"{property_name}\", {set_cast}value);".format({
+			getset.append("set => _object.Set(PropertyName.{csharp_property_name}, {set_cast}value);".format({
 				set_cast = _property_set_cast(property),
-				property_name = property_name,
+				csharp_property_name = csharp_property_name,
 			}))
 		else:
 			getset.append("set => _object.{csharp_property_name} = value;".format({
@@ -275,10 +293,10 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 
 
 static func _generate_method(cls_name: StringName, method: Dictionary) -> String:
-	var is_static = method["flags"] & METHOD_FLAG_STATIC
-	var return_type = _get_method_return_type(method["name"], method["return"])
 	var method_name = method["name"]
 	var csharp_method_name = method_name.to_pascal_case()
+	var return_type = _get_method_return_type(method_name, method["return"])
+	var is_static = method["flags"] & METHOD_FLAG_STATIC
 
 	var arg_types = PackedStringArray()
 	var arg_names = PackedStringArray()
@@ -329,9 +347,11 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 		arg_names.append("varargs")
 
 	if _is_extension_class(cls_name):
-		arg_names.insert(0, "\"%s\"" % method_name)
+		arg_names.insert(0, "MethodName.{csharp_method_name}".format({
+			csharp_method_name = csharp_method_name,
+		}))
 		if is_static:
-			implementation.append("{maybe_return}ClassDB.ClassCallStatic(ClassName, {arg_names});".format({
+			implementation.append("{maybe_return}ClassDB.ClassCallStatic(NativeName, {arg_names});".format({
 				arg_names = ", ".join(arg_names),
 				maybe_return = "return " + _property_get_cast(method["return"]) if return_type != "void" else "",
 			}))
@@ -342,27 +362,27 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 			}))
 	else:
 		if is_static:
-			implementation.append("{maybe_return}{engine_class}.{method_name}({arg_names});".format({
+			implementation.append("{maybe_return}{engine_class}.{csharp_method_name}({arg_names});".format({
 				arg_names = ", ".join(arg_names),
 				engine_class = _first_non_extension_parent(cls_name),
-				method_name = csharp_method_name,
+				csharp_method_name = csharp_method_name,
 				maybe_return = "return " if return_type != "void" else "",
 			}))
 		else:
-			implementation.append("{maybe_return}_object.{method_name}({arg_names});".format({
+			implementation.append("{maybe_return}_object.{csharp_method_name}({arg_names});".format({
 				arg_names = ", ".join(arg_names),
-				method_name = csharp_method_name,
+				csharp_method_name = csharp_method_name,
 				maybe_return = "return " if return_type != "void" else "",
 			}))
 
 	return """
-		public {maybe_static}{maybe_override}{return_type} {cs_method_name}({args})
+		public {maybe_static}{maybe_override}{return_type} {csharp_method_name}({args})
 		{
 		{implementation}
 		}
 	""".dedent().format({
 		args = ", ".join(args),
-		cs_method_name = csharp_method_name,
+		csharp_method_name = csharp_method_name,
 		implementation = "\n".join(implementation).indent("\t"),
 		maybe_override = "override " if csharp_method_name == "ToString" else "",
 		maybe_static = "static " if is_static else "",
@@ -395,21 +415,20 @@ static func _generate_signal(cls_name: StringName, sig: Dictionary):
 		})
 
 	return """
-		public event {delegate_type} {cs_signal_name}
+		public event {delegate_type} {csharp_signal_name}
 		{
 			add
 			{
-				Connect(\"{signal_name}\", Callable.From(value));
+				Connect(SignalName.{csharp_signal_name}, Callable.From(value));
 			}
 			remove
 			{
-				Disconnect(\"{signal_name}\", Callable.From(value));
+				Disconnect(SignalName.{csharp_signal_name}, Callable.From(value));
 			}
 		}
 	""".dedent().format({
 		delegate_type = delegate_type,
-		cs_signal_name = csharp_signal_name,
-		signal_name = signal_name,
+		csharp_signal_name = csharp_signal_name,
 	}).strip_edges()
 
 
@@ -547,3 +566,28 @@ static func _get_parent_classes(cls_name: StringName) -> Array[StringName]:
 		if cls_name == "Object":
 			break
 	return parent_classes
+
+
+static func _generate_strings_class(cls_name: StringName, string_name_type: StringNameType, string_names: PackedStringArray) -> String:
+	var parent_class = ClassDB.get_parent_class(cls_name)
+	var lines = PackedStringArray()
+	for name in string_names:
+		if string_name_type == StringNameType.METHOD_NAME and ClassDB.class_has_method(parent_class, name):
+			continue
+		if string_name_type == StringNameType.SIGNAL_NAME and ClassDB.class_has_signal(parent_class, name):
+			continue
+		lines.append("public static readonly StringName {cs_name} = \"{name}\";".format({
+			cs_name = name.to_pascal_case(),
+			name = name,
+		}))
+	return """
+		public {maybe_new}class {strings_class} : {parent_class}.{strings_class}
+		{
+		{lines}
+		}
+	""".dedent().format({
+		lines = "\n".join(lines).indent("\t"),
+		maybe_new = "new " if _is_extension_class(parent_class) else "",
+		parent_class = parent_class,
+		strings_class = StringNameTypeName[string_name_type],
+	}).strip_edges()

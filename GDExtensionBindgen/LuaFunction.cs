@@ -7,9 +7,7 @@ namespace GDExtensionBindgen;
 
 public class LuaFunction : LuaObject
 {
-	public new static readonly StringName ClassName = "LuaFunction";
-
-	public LuaFunction() : base(ClassName)
+	public LuaFunction() : base(NativeName)
 	{
 	}
 	protected LuaFunction(StringName @class) : base(@class)
@@ -26,21 +24,40 @@ public class LuaFunction : LuaObject
 	public static implicit operator Variant(LuaFunction self) => self?._object;
 	public static explicit operator LuaFunction(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
+	public new class PropertyName : LuaObject.PropertyName
+	{
+
+	}
+
+	public new class MethodName : LuaObject.MethodName
+	{
+		public static readonly StringName Invokev = "invokev";
+		public static readonly StringName Invoke = "invoke";
+		public static readonly StringName ToCallable = "to_callable";
+	}
+
+	public new class SignalName : LuaObject.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaFunction";
+
 	#region Methods
 
 	public Variant Invokev(Godot.Collections.Array @arg_array)
 	{
-		return (Variant)_object.Call("invokev", @arg_array);
+		return (Variant)_object.Call(MethodName.Invokev, @arg_array);
 	}
 
 	public Variant Invoke(params Variant[] varargs)
 	{
-		return (Variant)_object.Call("invoke", varargs);
+		return (Variant)_object.Call(MethodName.Invoke, varargs);
 	}
 
 	public Godot.Callable ToCallable()
 	{
-		return (Godot.Callable)_object.Call("to_callable");
+		return (Godot.Callable)_object.Call(MethodName.ToCallable);
 	}
 
 	#endregion

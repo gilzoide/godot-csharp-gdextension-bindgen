@@ -7,11 +7,10 @@ namespace GDExtensionBindgen;
 
 public class LuaObject
 {
-	public static readonly StringName ClassName = "LuaObject";
-
+	// Engine object used for calling engine methods
 	protected RefCounted _object;
 
-	public LuaObject() : this(ClassName)
+	public LuaObject() : this(NativeName)
 	{
 	}
 	protected LuaObject(StringName @class) : this(ClassDB.Instantiate(@class))
@@ -29,16 +28,34 @@ public class LuaObject
 	public static implicit operator Variant(LuaObject self) => self?._object;
 	public static explicit operator LuaObject(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
 
+	public class PropertyName : RefCounted.PropertyName
+	{
+
+	}
+
+	public class MethodName : RefCounted.MethodName
+	{
+		public static readonly StringName GetLuaState = "get_lua_state";
+		public static readonly StringName GetPointerValue = "get_pointer_value";
+	}
+
+	public class SignalName : RefCounted.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaObject";
+
 	#region Methods
 
 	public LuaState GetLuaState()
 	{
-		return (LuaState)_object.Call("get_lua_state");
+		return (LuaState)_object.Call(MethodName.GetLuaState);
 	}
 
 	public int GetPointerValue()
 	{
-		return (int)_object.Call("get_pointer_value");
+		return (int)_object.Call(MethodName.GetPointerValue);
 	}
 
 	#endregion
@@ -326,11 +343,11 @@ public class LuaObject
 	{
 		add
 		{
-			Connect("script_changed", Callable.From(value));
+			Connect(SignalName.ScriptChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("script_changed", Callable.From(value));
+			Disconnect(SignalName.ScriptChanged, Callable.From(value));
 		}
 	}
 
@@ -338,11 +355,11 @@ public class LuaObject
 	{
 		add
 		{
-			Connect("property_list_changed", Callable.From(value));
+			Connect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("property_list_changed", Callable.From(value));
+			Disconnect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 	}
 

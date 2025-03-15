@@ -7,11 +7,10 @@ namespace GDExtensionBindgen;
 
 public class LuaState
 {
-	public static readonly StringName ClassName = "LuaState";
-
+	// Engine object used for calling engine methods
 	protected RefCounted _object;
 
-	public LuaState() : this(ClassName)
+	public LuaState() : this(NativeName)
 	{
 	}
 	protected LuaState(StringName @class) : this(ClassDB.Instantiate(@class))
@@ -28,6 +27,31 @@ public class LuaState
 	public static implicit operator RefCounted(LuaState self) => self?._object;
 	public static implicit operator Variant(LuaState self) => self?._object;
 	public static explicit operator LuaState(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
+
+	public class PropertyName : RefCounted.PropertyName
+	{
+		public static readonly StringName Globals = "globals";
+		public static readonly StringName Registry = "registry";
+	}
+
+	public class MethodName : RefCounted.MethodName
+	{
+		public static readonly StringName OpenLibraries = "open_libraries";
+		public static readonly StringName CreateTable = "create_table";
+		public static readonly StringName LoadString = "load_string";
+		public static readonly StringName LoadFile = "load_file";
+		public static readonly StringName DoString = "do_string";
+		public static readonly StringName DoFile = "do_file";
+		public static readonly StringName GetGlobals = "get_globals";
+		public static readonly StringName GetRegistry = "get_registry";
+	}
+
+	public class SignalName : RefCounted.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaState";
 
 	#region Enums
 
@@ -62,12 +86,12 @@ public class LuaState
 
 	public LuaTable Globals
 	{
-		get => (LuaTable)_object.Get("globals");
+		get => (LuaTable)_object.Get(PropertyName.Globals);
 	}
 
 	public LuaTable Registry
 	{
-		get => (LuaTable)_object.Get("registry");
+		get => (LuaTable)_object.Get(PropertyName.Registry);
 	}
 
 	#endregion
@@ -76,43 +100,43 @@ public class LuaState
 
 	public void OpenLibraries(LuaState.LibraryEnum @libraries = (LuaState.LibraryEnum)262143)
 	{
-		_object.Call("open_libraries", (int)@libraries);
+		_object.Call(MethodName.OpenLibraries, (int)@libraries);
 	}
 
 	public LuaTable CreateTable(Godot.Collections.Dictionary @initial_values = null)
 	{
 		@initial_values ??= new();
-		return (LuaTable)_object.Call("create_table", @initial_values);
+		return (LuaTable)_object.Call(MethodName.CreateTable, @initial_values);
 	}
 
 	public Variant LoadString(string @chunk, string @chunkname = "", LuaTable @env = default)
 	{
-		return (Variant)_object.Call("load_string", @chunk, @chunkname, @env);
+		return (Variant)_object.Call(MethodName.LoadString, @chunk, @chunkname, @env);
 	}
 
 	public Variant LoadFile(string @filename, int @buffer_size = 1024, LuaTable @env = default)
 	{
-		return (Variant)_object.Call("load_file", @filename, @buffer_size, @env);
+		return (Variant)_object.Call(MethodName.LoadFile, @filename, @buffer_size, @env);
 	}
 
 	public Variant DoString(string @chunk, string @chunkname = "", LuaTable @env = default)
 	{
-		return (Variant)_object.Call("do_string", @chunk, @chunkname, @env);
+		return (Variant)_object.Call(MethodName.DoString, @chunk, @chunkname, @env);
 	}
 
 	public Variant DoFile(string @filename, int @buffer_size = 1024, LuaTable @env = default)
 	{
-		return (Variant)_object.Call("do_file", @filename, @buffer_size, @env);
+		return (Variant)_object.Call(MethodName.DoFile, @filename, @buffer_size, @env);
 	}
 
 	public LuaTable GetGlobals()
 	{
-		return (LuaTable)_object.Call("get_globals");
+		return (LuaTable)_object.Call(MethodName.GetGlobals);
 	}
 
 	public LuaTable GetRegistry()
 	{
-		return (LuaTable)_object.Call("get_registry");
+		return (LuaTable)_object.Call(MethodName.GetRegistry);
 	}
 
 	#endregion
@@ -400,11 +424,11 @@ public class LuaState
 	{
 		add
 		{
-			Connect("script_changed", Callable.From(value));
+			Connect(SignalName.ScriptChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("script_changed", Callable.From(value));
+			Disconnect(SignalName.ScriptChanged, Callable.From(value));
 		}
 	}
 
@@ -412,11 +436,11 @@ public class LuaState
 	{
 		add
 		{
-			Connect("property_list_changed", Callable.From(value));
+			Connect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("property_list_changed", Callable.From(value));
+			Disconnect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 	}
 

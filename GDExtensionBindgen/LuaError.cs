@@ -7,11 +7,10 @@ namespace GDExtensionBindgen;
 
 public class LuaError
 {
-	public static readonly StringName ClassName = "LuaError";
-
+	// Engine object used for calling engine methods
 	protected RefCounted _object;
 
-	public LuaError() : this(ClassName)
+	public LuaError() : this(NativeName)
 	{
 	}
 	protected LuaError(StringName @class) : this(ClassDB.Instantiate(@class))
@@ -28,6 +27,27 @@ public class LuaError
 	public static implicit operator RefCounted(LuaError self) => self?._object;
 	public static implicit operator Variant(LuaError self) => self?._object;
 	public static explicit operator LuaError(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
+
+	public class PropertyName : RefCounted.PropertyName
+	{
+		public static readonly StringName Message = "message";
+		public static readonly StringName Status = "status";
+	}
+
+	public class MethodName : RefCounted.MethodName
+	{
+		public static readonly StringName GetMessage = "get_message";
+		public static readonly StringName SetMessage = "set_message";
+		public static readonly StringName GetStatus = "get_status";
+		public static readonly StringName SetStatus = "set_status";
+	}
+
+	public class SignalName : RefCounted.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaError";
 
 	#region Enums
 
@@ -49,14 +69,14 @@ public class LuaError
 
 	public string Message
 	{
-		get => (string)_object.Get("message");
-		set => _object.Set("message", value);
+		get => (string)_object.Get(PropertyName.Message);
+		set => _object.Set(PropertyName.Message, value);
 	}
 
 	public string Status
 	{
-		get => (string)_object.Get("status");
-		set => _object.Set("status", value);
+		get => (string)_object.Get(PropertyName.Status);
+		set => _object.Set(PropertyName.Status, value);
 	}
 
 	#endregion
@@ -65,22 +85,22 @@ public class LuaError
 
 	public string GetMessage()
 	{
-		return (string)_object.Call("get_message");
+		return (string)_object.Call(MethodName.GetMessage);
 	}
 
 	public void SetMessage(string @message)
 	{
-		_object.Call("set_message", @message);
+		_object.Call(MethodName.SetMessage, @message);
 	}
 
 	public LuaError.StatusEnum GetStatus()
 	{
-		return (LuaError.StatusEnum)(int)_object.Call("get_status");
+		return (LuaError.StatusEnum)(int)_object.Call(MethodName.GetStatus);
 	}
 
 	public void SetStatus(LuaError.StatusEnum @status)
 	{
-		_object.Call("set_status", (int)@status);
+		_object.Call(MethodName.SetStatus, (int)@status);
 	}
 
 	#endregion
@@ -368,11 +388,11 @@ public class LuaError
 	{
 		add
 		{
-			Connect("script_changed", Callable.From(value));
+			Connect(SignalName.ScriptChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("script_changed", Callable.From(value));
+			Disconnect(SignalName.ScriptChanged, Callable.From(value));
 		}
 	}
 
@@ -380,11 +400,11 @@ public class LuaError
 	{
 		add
 		{
-			Connect("property_list_changed", Callable.From(value));
+			Connect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("property_list_changed", Callable.From(value));
+			Disconnect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 	}
 

@@ -7,9 +7,7 @@ namespace GDExtensionBindgen;
 
 public class LuaCoroutine : LuaObject
 {
-	public new static readonly StringName ClassName = "LuaCoroutine";
-
-	public LuaCoroutine() : base(ClassName)
+	public LuaCoroutine() : base(NativeName)
 	{
 	}
 	protected LuaCoroutine(StringName @class) : base(@class)
@@ -25,6 +23,26 @@ public class LuaCoroutine : LuaObject
 	public static implicit operator RefCounted(LuaCoroutine self) => self?._object;
 	public static implicit operator Variant(LuaCoroutine self) => self?._object;
 	public static explicit operator LuaCoroutine(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
+
+	public new class PropertyName : LuaObject.PropertyName
+	{
+		public static readonly StringName Status = "status";
+	}
+
+	public new class MethodName : LuaObject.MethodName
+	{
+		public static readonly StringName GetStatus = "get_status";
+		public static readonly StringName Resumev = "resumev";
+		public static readonly StringName Resume = "resume";
+		public static readonly StringName Create = "create";
+	}
+
+	public new class SignalName : LuaObject.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaCoroutine";
 
 	#region Enums
 
@@ -45,7 +63,7 @@ public class LuaCoroutine : LuaObject
 
 	public int Status
 	{
-		get => (int)_object.Get("status");
+		get => (int)_object.Get(PropertyName.Status);
 	}
 
 	#endregion
@@ -54,22 +72,22 @@ public class LuaCoroutine : LuaObject
 
 	public LuaCoroutine.LuaCoroutineStatusEnum GetStatus()
 	{
-		return (LuaCoroutine.LuaCoroutineStatusEnum)(int)_object.Call("get_status");
+		return (LuaCoroutine.LuaCoroutineStatusEnum)(int)_object.Call(MethodName.GetStatus);
 	}
 
 	public Variant Resumev(Godot.Collections.Array @arguments)
 	{
-		return (Variant)_object.Call("resumev", @arguments);
+		return (Variant)_object.Call(MethodName.Resumev, @arguments);
 	}
 
 	public Variant Resume(params Variant[] varargs)
 	{
-		return (Variant)_object.Call("resume", varargs);
+		return (Variant)_object.Call(MethodName.Resume, varargs);
 	}
 
 	public static LuaCoroutine Create(LuaFunction @function)
 	{
-		return (LuaCoroutine)ClassDB.ClassCallStatic(ClassName, "create", @function);
+		return (LuaCoroutine)ClassDB.ClassCallStatic(NativeName, MethodName.Create, @function);
 	}
 
 	#endregion

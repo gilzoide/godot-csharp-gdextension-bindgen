@@ -7,11 +7,10 @@ namespace GDExtensionBindgen;
 
 public class LuaScriptResourceFormatLoader
 {
-	public static readonly StringName ClassName = "LuaScriptResourceFormatLoader";
-
+	// Engine object used for calling engine methods
 	protected ResourceFormatLoader _object;
 
-	public LuaScriptResourceFormatLoader() : this(ClassName)
+	public LuaScriptResourceFormatLoader() : this(NativeName)
 	{
 	}
 	protected LuaScriptResourceFormatLoader(StringName @class) : this(ClassDB.Instantiate(@class))
@@ -28,6 +27,23 @@ public class LuaScriptResourceFormatLoader
 	public static implicit operator ResourceFormatLoader(LuaScriptResourceFormatLoader self) => self?._object;
 	public static implicit operator Variant(LuaScriptResourceFormatLoader self) => self?._object;
 	public static explicit operator LuaScriptResourceFormatLoader(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
+
+	public class PropertyName : ResourceFormatLoader.PropertyName
+	{
+
+	}
+
+	public class MethodName : ResourceFormatLoader.MethodName
+	{
+
+	}
+
+	public class SignalName : ResourceFormatLoader.SignalName
+	{
+
+	}
+
+	private static readonly StringName NativeName = "LuaScriptResourceFormatLoader";
 
 	#region Inherited Methods
 
@@ -312,11 +328,11 @@ public class LuaScriptResourceFormatLoader
 	{
 		add
 		{
-			Connect("script_changed", Callable.From(value));
+			Connect(SignalName.ScriptChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("script_changed", Callable.From(value));
+			Disconnect(SignalName.ScriptChanged, Callable.From(value));
 		}
 	}
 
@@ -324,11 +340,11 @@ public class LuaScriptResourceFormatLoader
 	{
 		add
 		{
-			Connect("property_list_changed", Callable.From(value));
+			Connect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 		remove
 		{
-			Disconnect("property_list_changed", Callable.From(value));
+			Disconnect(SignalName.PropertyListChanged, Callable.From(value));
 		}
 	}
 
