@@ -33,7 +33,11 @@ func _exit_tree():
 	remove_tool_menu_item(MENU_ITEM_NAME)
 
 
-static func generate_csharp_script(cls_name: StringName, output_dir := GENERATED_SCRIPTS_FOLDER):
+static func generate_csharp_script(
+	cls_name: StringName,
+	output_dir := GENERATED_SCRIPTS_FOLDER,
+	name_space := GENERATED_NAMESPACE,
+):
 	var class_is_editor_only = _is_editor_extension_class(cls_name)
 	var parent_class = ClassDB.get_parent_class(cls_name)
 	var parent_class_is_extension = _is_extension_class(parent_class)
@@ -223,14 +227,14 @@ static func generate_csharp_script(cls_name: StringName, output_dir := GENERATED
 		using System.Diagnostics.CodeAnalysis;
 		using Godot;
 
-		namespace {GENERATED_NAMESPACE};
+		namespace {name_space};
 
 		public class {cls_name}{inheritance}
 		{
 		{regions}
 		}
 	""".dedent().format({
-		GENERATED_NAMESPACE = GENERATED_NAMESPACE,
+		name_space = name_space,
 		cls_name = cls_name,
 		inheritance = " : " + parent_class if parent_class_is_extension else "",
 		regions = "\n\n".join(regions).indent("\t"),
@@ -254,11 +258,14 @@ static func generate_csharp_script(cls_name: StringName, output_dir := GENERATED
 	new_script.store_string(code)
 
 
-static func generate_gdextension_csharp_scripts(output_dir := GENERATED_SCRIPTS_FOLDER):
+static func generate_gdextension_csharp_scripts(
+	output_dir := GENERATED_SCRIPTS_FOLDER,
+	name_space := GENERATED_NAMESPACE,
+):
 	var classes = ClassDB.get_class_list()
 	for cls_name in classes:
 		if _is_extension_class(cls_name):
-			generate_csharp_script(cls_name, output_dir)
+			generate_csharp_script(cls_name, output_dir, name_space)
 
 
 static func _generate_enum(cls_name: StringName, enum_name: StringName) -> String:
@@ -268,7 +275,7 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 			common_prefix = constant_name
 		else:
 			common_prefix = _get_common_prefix(common_prefix, constant_name)
-	
+
 	var constants = PackedStringArray()
 	for constant_name in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
 		constants.append("{csharp_constant_name} = {constant_value}L,".format({
