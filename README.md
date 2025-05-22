@@ -10,7 +10,7 @@ Automatic C# bindings generator for GDExtension classes (Godot 4.4+)
 
 
 ## How does it work?
-This editor plugin contains a single script [csharp_gdextension_bindgen.gd](addons/csharp_gdextension_bindgen/csharp_gdextension_bindgen.gd) with the whole C# code generation.
+This editor plugin contains the script [csharp_gdextension_bindgen.gd](addons/csharp_gdextension_bindgen/csharp_gdextension_bindgen.gd) with the whole C# code generation.
 It uses the reflection provided by [ClassDB](https://docs.godotengine.org/en/stable/classes/class_classdb.html) to generate bindings to enums, constants, properties, methods and signals for all classes registered using the GDExtension API.
 
 The generated C# classes are in the `GDExtensionBindgen` namespace, so you'll need to add `using GDExtensionBindgen;` before using them.
@@ -20,6 +20,17 @@ The generated classes do not inherit from any `GodotObject` subclass because the
 
 ## Caveats
 - Since generated classes do not inherit `GodotObject`, there's no easy way to create C# scripts that specify the wrapped GDExtension classes as their base class
+
+
+## Generating bindings from the CLI
+This addon also contains the [cli_entrypoint.gd](addons/csharp_gdextension_bindgen/cli_entrypoint.gd) script that can be used to generate bindings via command line:
+```sh
+# Generates C# bindings for all GDExtension classes
+# Optionally pass the desired output directory and C# namespace
+godot --headless --script addons/csharp_gdextension_bindgen/cli_entrypoint.gd -- [OUTPUT_DIR] [NAMESPACE]
+```
+
+This can be used by GDExtension projects themselves as a way to distribute pre-generated C# bindings.
 
 
 ## TODO
