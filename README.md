@@ -1,4 +1,6 @@
 # C# GDExtension Bindgen
+[![Godot Asset Library page](https://img.shields.io/static/v1?logo=godotengine&label=asset%20library&color=478CBF&message=0.2.0)](https://godotengine.org/asset-library/asset/3832)
+
 Automatic C# bindings generator for GDExtension classes (Godot 4.4+)
 
 
