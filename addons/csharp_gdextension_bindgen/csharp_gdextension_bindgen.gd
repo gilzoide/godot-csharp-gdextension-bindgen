@@ -563,14 +563,32 @@ static func _get_property_type(property: Dictionary) -> String:
 static func _get_mapped_variant_type(variant_type_name: String) -> String:
 	var _type_map = {
 		"Variant": "Variant",
-		"bool": "bool",
-		"int": "long",
-		"float": "double" if OS.has_feature("double") else "float",
-		"String": "string",
-		"StringName": "StringName",
-		"Dictionary": "Godot.Collections.Dictionary",
+		type_string(TYPE_BOOL): "bool",
+		type_string(TYPE_INT): "int",
+		type_string(TYPE_FLOAT): "double" if OS.has_feature("double") else "float",
+		type_string(TYPE_STRING): "string",
+		type_string(TYPE_STRING_NAME): "StringName",
+		type_string(TYPE_VECTOR2I): "Godot.Vector2I",
+		type_string(TYPE_RECT2I): "Godot.Rect2I",
+		type_string(TYPE_VECTOR3I): "Godot.Vector3I",
+		type_string(TYPE_VECTOR4I): "Godot.Vector4I",
+		type_string(TYPE_AABB): "Godot.Aabb",
+		type_string(TYPE_RID): "Godot.Rid",
+		type_string(TYPE_OBJECT): "GodotObject",
+		type_string(TYPE_ARRAY): "Godot.Collections.Array",
+		type_string(TYPE_DICTIONARY): "Godot.Collections.Dictionary",
+		type_string(TYPE_PACKED_BYTE_ARRAY): "byte[]",
+		type_string(TYPE_PACKED_INT32_ARRAY): "int[]",
+		type_string(TYPE_PACKED_INT64_ARRAY): "long[]",
+		type_string(TYPE_PACKED_FLOAT32_ARRAY): "float[]",
+		type_string(TYPE_PACKED_FLOAT64_ARRAY): "double[]",
+		type_string(TYPE_PACKED_STRING_ARRAY): "string[]",
+		type_string(TYPE_PACKED_VECTOR2_ARRAY): "Godot.Vector2[]",
+		type_string(TYPE_PACKED_VECTOR3_ARRAY): "Godot.Vector3[]",
+		type_string(TYPE_PACKED_VECTOR4_ARRAY): "Godot.Vector4[]",
+		type_string(TYPE_PACKED_COLOR_ARRAY): "Godot.Color[]",
 	}
-	return _type_map[variant_type_name]
+	return _type_map.get(variant_type_name, "Godot." + variant_type_name)
 
 
 static func _property_get_cast(property: Dictionary):
