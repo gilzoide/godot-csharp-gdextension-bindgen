@@ -504,6 +504,8 @@ static func _get_property_type(property: Dictionary) -> String:
 					return "Godot.Error"
 				return enum_name + "Enum"
 			return "int"
+		TYPE_FLOAT:
+			return "double" if OS.has_feature("double") else "float"
 		TYPE_STRING:
 			return "string"
 		TYPE_VECTOR2I:
