@@ -275,6 +275,10 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 			common_prefix = constant_name
 		else:
 			common_prefix = _get_common_prefix(common_prefix, constant_name)
+	# Handle case where one of the constants is present in all constant names:
+	# remove last word from prefix. Example: FLAG_PROCESS_THREAD_MESSAGES
+	if common_prefix in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
+		common_prefix = common_prefix.rsplit("_", false, 1)[0]
 
 	var constants = PackedStringArray()
 	for constant_name in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
