@@ -302,7 +302,7 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 		flags = "[Flags]" if ClassDB.is_class_enum_bitfield(cls_name, enum_name) else "",
 		enum_name = enum_name,
 		constants = "\n".join(constants).indent("\t"),
-		maybe_enum_suffix = "" if enum_name.ends_with("Flags") else "Enum",
+		maybe_enum_suffix = "Enum" if _needs_enum_suffix(cls_name, enum_name) else "",
 	}).strip_edges()
 
 
@@ -316,7 +316,7 @@ static func _generate_integer_constant(cls_name: StringName, constant_name: Stri
 static func _generate_property(cls_name: StringName, property: Dictionary) -> String:
 	var property_name = property["name"]
 	var csharp_property_name = property_name.to_pascal_case()
-	var property_type = _get_property_type(property)
+	var property_type = _get_property_type(cls_name, property)
 
 	var getset = PackedStringArray()
 
@@ -324,7 +324,7 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 	if getter:
 		if _is_extension_class(cls_name):
 			getset.append("get => {get_cast}_object.Get(PropertyName.{csharp_property_name});".format({
-				get_cast = _property_get_cast(property),
+				get_cast = _property_get_cast(cls_name, property),
 				csharp_property_name = csharp_property_name,
 			}))
 		else:
@@ -359,7 +359,7 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 static func _generate_method(cls_name: StringName, method: Dictionary) -> String:
 	var method_name = method["name"]
 	var csharp_method_name = method_name.to_pascal_case()
-	var return_type = _get_method_return_type(method_name, method["return"])
+	var return_type = _get_method_return_type(cls_name, method_name, method["return"])
 	var is_static = method["flags"] & METHOD_FLAG_STATIC
 
 	var arg_types = PackedStringArray()
@@ -367,7 +367,7 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 
 	var args = PackedStringArray()
 	for argument in method["args"]:
-		var arg_type = _get_property_type(argument)
+		var arg_type = _get_property_type(cls_name, argument)
 		var arg_name = "@" + argument["name"]
 		# hardcode type that cannot be known from reflection in GDScript
 		if method["name"] == "connect" and arg_name == "@flags":
@@ -453,12 +453,12 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 		if is_static:
 			implementation.append("{maybe_return}ClassDB.ClassCallStatic(NativeName, {arg_names});".format({
 				arg_names = ", ".join(arg_names),
-				maybe_return = "return " + _property_get_cast(method["return"]) if return_type != "void" else "",
+				maybe_return = "return " + _property_get_cast(cls_name, method["return"]) if return_type != "void" else "",
 			}))
 		else:
 			implementation.append("{maybe_return}_object.Call({arg_names});".format({
 				arg_names = ", ".join(arg_names),
-				maybe_return = "return " + _property_get_cast(method["return"]) if return_type != "void" else "",
+				maybe_return = "return " + _property_get_cast(cls_name, method["return"]) if return_type != "void" else "",
 			}))
 	else:
 		if is_static:
@@ -493,11 +493,11 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 static func _generate_signal(cls_name: StringName, sig: Dictionary):
 	var signal_name = sig["name"]
 	var csharp_signal_name = signal_name.to_pascal_case()
-	var return_type = _get_method_return_type(signal_name, sig["return"])
+	var return_type = _get_method_return_type(cls_name, signal_name, sig["return"])
 
 	var arg_types = PackedStringArray()
 	for argument in sig["args"]:
-		var arg_type = _get_property_type(argument)
+		var arg_type = _get_property_type(cls_name, argument)
 		arg_types.append(arg_type)
 
 	var delegate_type
@@ -536,7 +536,7 @@ static func _property_is_enum(property: Dictionary) -> bool:
 	return property["usage"] & (PROPERTY_USAGE_CLASS_IS_ENUM | PROPERTY_USAGE_CLASS_IS_BITFIELD)
 
 
-static func _get_property_type(property: Dictionary) -> String:
+static func _get_property_type(cls_name: StringName, property: Dictionary) -> String:
 	match property["type"]:
 		TYPE_NIL:
 			return "Variant"
@@ -547,7 +547,11 @@ static func _get_property_type(property: Dictionary) -> String:
 				var enum_name = property["class_name"]
 				if enum_name == "Error":
 					return "Godot.Error"
-				return enum_name + "Enum"
+				var split = enum_name.split(".")
+				if split.size() == 1:
+					return enum_name + ("Enum" if _needs_enum_suffix(cls_name, enum_name) else "")
+				else:
+					return enum_name + ("Enum" if _needs_enum_suffix(split[0], split[1]) else "")
 			return "int"
 		TYPE_FLOAT:
 			return "double" if OS.has_feature("double") else "float"
@@ -632,8 +636,8 @@ static func _get_mapped_variant_type(variant_type_name: String) -> String:
 	return _type_map.get(variant_type_name, "Godot." + variant_type_name)
 
 
-static func _property_get_cast(property: Dictionary):
-	var property_type = _get_property_type(property)
+static func _property_get_cast(cls_name: StringName, property: Dictionary):
+	var property_type = _get_property_type(cls_name, property)
 	if _property_is_enum(property):
 		return "(%s)(int)" % property_type
 	else:
@@ -664,7 +668,7 @@ static func _first_non_extension_parent(cls_name: StringName) -> StringName:
 	return cls_name
 
 
-static func _get_method_return_type(method_name: StringName, method_return: Dictionary) -> String:
+static func _get_method_return_type(cls_name: StringName, method_name: StringName, method_return: Dictionary) -> String:
 	# hardcode type that cannot be known from reflection in GDScript
 	if method_name == "get_instance_id":
 		return "ulong"
@@ -675,7 +679,7 @@ static func _get_method_return_type(method_name: StringName, method_return: Dict
 		else:
 			return "void"
 	else:
-		return _get_property_type(method_return)
+		return _get_property_type(cls_name, method_return)
 
 
 static func _get_parent_classes(cls_name: StringName) -> Array[StringName]:
@@ -735,3 +739,16 @@ static func _get_class_from_class_name(cls_name: String) -> String:
 		while not ClassDB.is_parent_class(test_cls, parent_classes[0]):
 			parent_classes.pop_front()
 	return parent_classes[0]
+
+
+static func _needs_enum_suffix(cls_name: StringName, enum_name: String) -> bool:
+	var snake_case_enum_name = enum_name.to_snake_case()
+	if ClassDB.class_has_method(cls_name, snake_case_enum_name):
+		return true
+	if ClassDB.class_has_signal(cls_name, snake_case_enum_name):
+		return true
+	var properties = ClassDB.class_get_property_list(cls_name)
+	for property in properties:
+		if snake_case_enum_name == property["name"]:
+			return true
+	return false
