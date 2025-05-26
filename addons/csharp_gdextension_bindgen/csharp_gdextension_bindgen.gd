@@ -104,26 +104,12 @@ static func generate_csharp_script(
 	for enum_name in ClassDB.class_get_enum_list(cls_name, true):
 		enums.append(_generate_enum(cls_name, enum_name))
 
-	var inherited_enums = PackedStringArray()
-	if not parent_class_is_extension:
-		for inherited_class in _get_parent_classes(cls_name):
-			for enum_name in ClassDB.class_get_enum_list(inherited_class, true):
-				inherited_enums.append(_generate_enum(inherited_class, enum_name))
-
 	# INTEGER CONSTANTS
 	var integer_constants = PackedStringArray()
 	for constant_name in ClassDB.class_get_integer_constant_list(cls_name, true):
 		if not ClassDB.class_get_integer_constant_enum(cls_name, constant_name, true).is_empty():
 			continue
 		integer_constants.append(_generate_integer_constant(cls_name, constant_name))
-
-	var inherited_integer_constants = PackedStringArray()
-	if not parent_class_is_extension:
-		for inherited_class in _get_parent_classes(cls_name):
-			for constant_name in ClassDB.class_get_integer_constant_list(inherited_class, true):
-				if not ClassDB.class_get_integer_constant_enum(inherited_class, constant_name, true).is_empty():
-					continue
-				inherited_integer_constants.append(_generate_integer_constant(inherited_class, constant_name))
 
 	# PROPERTIES
 	var properties = PackedStringArray()
@@ -188,17 +174,9 @@ static func generate_csharp_script(
 		regions.append("#region Enums")
 		regions.append("\n\n".join(enums))
 		regions.append("#endregion")
-	if not inherited_enums.is_empty():
-		regions.append("#region Inherited Enums")
-		regions.append("\n\n".join(inherited_enums))
-		regions.append("#endregion")
 	if not integer_constants.is_empty():
 		regions.append("#region Integer Constants")
 		regions.append("\n\n".join(integer_constants))
-		regions.append("#endregion")
-	if not inherited_integer_constants.is_empty():
-		regions.append("#region Inherited Integer Constants")
-		regions.append("\n\n".join(inherited_integer_constants))
 		regions.append("#endregion")
 	if not properties.is_empty():
 		regions.append("#region Properties")
