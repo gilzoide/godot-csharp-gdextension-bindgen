@@ -148,6 +148,8 @@ static func generate_csharp_script(
 	for method in ClassDB.class_get_method_list(cls_name, true):
 		if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
 			continue
+		if method["name"].begins_with("_"):
+			continue
 		method_names.append(method["name"])
 		methods.append(_generate_method(cls_name, method))
 
@@ -156,6 +158,8 @@ static func generate_csharp_script(
 		for inherited_class in _get_parent_classes(cls_name):
 			for method in ClassDB.class_get_method_list(inherited_class, true):
 				if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
+					continue
+				if method["name"].begins_with("_"):
 					continue
 				inherited_methods.append(_generate_method(inherited_class, method))
 
