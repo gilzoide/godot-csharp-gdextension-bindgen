@@ -275,8 +275,9 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 			common_prefix = constant_name
 		else:
 			common_prefix = _get_common_prefix(common_prefix, constant_name)
-	# Handle case where one of the constants is present in all constant names:
-	# remove last word from prefix. Example: FLAG_PROCESS_THREAD_MESSAGES
+	# Handle special case where one of the constants is present in all constant
+	# names: remove last word from prefix.
+	# Example case: Node.ProcessThreadMessages and FLAG_PROCESS_THREAD_MESSAGES
 	if common_prefix in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
 		common_prefix = common_prefix.rsplit("_", false, 1)[0]
 
@@ -526,7 +527,7 @@ static func _get_property_type(property: Dictionary) -> String:
 			return "Godot.Rid"
 		TYPE_OBJECT:
 			if property["class_name"] and property["class_name"] != "Object":
-				return property["class_name"]
+				return _get_class_from_class_name(property["class_name"])
 			else:
 				return "GodotObject"
 		TYPE_ARRAY:
@@ -678,3 +679,19 @@ static func _get_common_prefix(s1: String, s2: String) -> String:
 		if s1[i] != s2[i]:
 			return s1.substr(0, i)
 	return s1.substr(0, common_length)
+
+
+static func _get_class_from_class_name(cls_name: String) -> String:
+	var classes = cls_name.split(",")
+	if classes.size() == 1:
+		return cls_name
+	
+	# Handle special case where 2 or more class names are present separated
+	# by ",": calculate the common parent class.
+	# Example case: CanvasItem.material uses "CanvasItemMaterial,ShaderMaterial"
+	var parent_classes = _get_parent_classes(classes[0])
+	for i in range(1, classes.size()):
+		var test_cls = classes[i]
+		while not ClassDB.is_parent_class(test_cls, parent_classes[0]):
+			parent_classes.pop_front()
+	return parent_classes[0]
