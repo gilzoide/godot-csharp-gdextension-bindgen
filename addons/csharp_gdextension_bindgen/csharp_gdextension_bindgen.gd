@@ -384,13 +384,19 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 	for default_value in default_args:
 		if default_value == null:
 			default_value = "default"
+		# handle enums
 		elif default_value is int and arg_types[i] != "int":
 			default_value = ("(%s)" % arg_types[i]) + str(default_value)
-		elif default_value is String:
-			default_value = '"%s"' % default_value
-		elif default_value is StringName:
+		# C# requires the "f" suffix for float literals
+		elif default_value is float and arg_types[i] == "float":
+			default_value = "%sf" % default_value
+		# NOTE: don't move this branch below the String one, since most of the
+		# time when arg_types[i] == StringName, default_value is String
+		elif default_value is StringName or arg_types[i] == "Godot.StringName":
 			implementation.append('%s ??= "%s";' % [arg_names[i], default_value])
 			default_value = "null"
+		elif default_value is String:
+			default_value = '"%s"' % default_value
 		elif default_value is Array:
 			assert(default_value.is_empty(), "Populated Array not supported yet! " + str(default_value)) # TODO: support populated array as default value
 			implementation.append("%s ??= new();" % arg_names[i])
@@ -398,6 +404,36 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 		elif default_value is Dictionary:
 			assert(default_value.is_empty(), "Populated Dictionary not supported yet! " + str(default_value)) # TODO: support populated dictionary as default value
 			implementation.append("%s ??= new();" % arg_names[i])
+			default_value = "null"
+		elif (
+			default_value is Vector2 or default_value is Vector3 or default_value is Vector4
+			or default_value is Color
+		):
+			args[i] = args[i].replace(arg_types[i], arg_types[i] + "?")
+			var impl = "%s ??= new%s;" % [arg_names[i], default_value]
+			if not OS.has_feature("double"):
+				impl = impl.replace(",", "f,").replace(")", "f)")
+			implementation.append(impl)
+			default_value = "null"
+		elif (
+			default_value is PackedByteArray
+			or default_value is PackedInt32Array or default_value is PackedInt64Array
+			or default_value is PackedFloat32Array or default_value is PackedFloat64Array
+			or default_value is PackedVector2Array or default_value is PackedVector3Array or default_value is PackedVector4Array
+			or default_value is PackedColorArray
+		):
+			assert(default_value.is_empty(), "Populated Packed Array not supported yet! " + str(default_value))
+			implementation.append("%s ??= System.Array.Empty<%s>();" % [arg_names[i], arg_types[i].replace("[]", "")])
+			default_value = "null"
+		elif default_value is Transform2D:
+			assert(default_value == Transform2D.IDENTITY, "Only identity Transform2D is supported as default value")
+			args[i] = args[i].replace(arg_types[i], arg_types[i] + "?")
+			implementation.append("%s ??= Godot.Transform2D.Identity;" % arg_names[i])
+			default_value = "null"
+		elif default_value is Transform3D:
+			assert(default_value == Transform3D.IDENTITY, "Only identity Transform3D is supported as default value")
+			args[i] = args[i].replace(arg_types[i], arg_types[i] + "?")
+			implementation.append("%s ??= Godot.Transform3D.Identity;" % arg_names[i])
 			default_value = "null"
 		args[i] += " = " + str(default_value)
 		i += 1
