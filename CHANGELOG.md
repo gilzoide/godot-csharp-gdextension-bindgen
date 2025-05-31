@@ -1,5 +1,8 @@
 # Changelog
-## [Unreleased](https://github.com/gilzoide/godot-csharp-gdextension-bindgen/compare/0.2.0...HEAD)
+## [Unreleased](https://github.com/gilzoide/godot-csharp-gdextension-bindgen/compare/0.3.0...HEAD)
+
+
+## [0.3.0](https://github.com/gilzoide/godot-csharp-gdextension-bindgen/releases/tag/0.3.0)
 ### Added
 - Support for default values with types `float`, `StringName`, float Vector types, `Color`, all Packed Array types, `Transform2D` and `Transform3D`
 
