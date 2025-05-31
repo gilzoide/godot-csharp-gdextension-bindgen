@@ -23,6 +23,46 @@ const StringNameTypeName = {
 	StringNameType.METHOD_NAME: "MethodName",
 	StringNameType.SIGNAL_NAME: "SignalName",
 }
+const PASCAL_CASE_NAME_OVERRIDES = {
+	"BitMap": "Bitmap",
+	"JSONRPC": "JsonRpc",
+	"Object": "GodotObject",
+	"OpenXRIPBinding": "OpenXRIPBinding",
+	"SkeletonModification2DCCDIK": "SkeletonModification2DCcdik",
+	"SkeletonModification2DFABRIK": "SkeletonModification2DFabrik",
+	"SkeletonModification3DCCDIK": "SkeletonModification3DCcdik",
+	"SkeletonModification3DFABRIK": "SkeletonModification3DFabrik",
+	"System": "System_",
+	"Thread": "GodotThread",
+}
+const PASCAL_CASE_PART_OVERRIDES = {
+	"AA": "AA", # Anti Aliasing
+	"AO": "AO", # Ambient Occlusion
+	"FILENAME": "FileName",
+	"FADEIN": "FadeIn",
+	"FADEOUT": "FadeOut",
+	"FX": "FX",
+	"GI": "GI", # Global Illumination
+	"GZIP": "GZip",
+	"HBOX": "HBox", # Horizontal Box
+	"ID": "Id",
+	"IO": "IO", # Input/Output
+	"IP": "IP", # Internet Protocol
+	"IV": "IV", # Initialization Vector
+	"MACOS": "MacOS",
+	"NODEPATH": "NodePath",
+	"SPIRV": "SpirV",
+	"STDIN": "StdIn",
+	"STDOUT": "StdOut",
+	"USERNAME": "UserName",
+	"UV": "UV",
+	"UV2": "UV2",
+	"VBOX": "VBox", # Vertical Box
+	"WHITESPACE": "WhiteSpace",
+	"WM": "WM",
+	"XR": "XR",
+	"XRAPI": "XRApi",
+}
 
 
 func _enter_tree():
@@ -549,7 +589,7 @@ static func _get_property_type(cls_name: StringName, property: Dictionary) -> St
 			return "Godot.Rid"
 		TYPE_OBJECT:
 			if property["class_name"] and property["class_name"] != "Object":
-				return _get_class_from_class_name(property["class_name"])
+				return _pascal_to_pascal_case(_get_class_from_class_name(property["class_name"]))
 			else:
 				return "GodotObject"
 		TYPE_ARRAY:
@@ -730,3 +770,80 @@ static func _needs_enum_suffix(cls_name: StringName, enum_name: String) -> bool:
 		if snake_case_enum_name == property["name"]:
 			return true
 	return false
+
+
+# Pascal case conversion used for class names.
+# Replicates the logic from `godot/modules/mono/utils/naming_utils.cpp`
+static func _is_ascii_upper_case(c: String) -> bool:
+	return c.to_upper() == c
+
+
+static func _is_ascii_lower_case(c: String) -> bool:
+	return c.to_lower() == c
+
+
+static func _is_digit(c: String) -> bool:
+	return c >= "0" and c <= "9"
+
+
+static func _split_pascal_case(p_identifier: String) -> PackedStringArray:
+	var parts := PackedStringArray()
+	var current_part_start := 0
+	var prev_was_upper := _is_ascii_upper_case(p_identifier[0])
+	for i in range(1, p_identifier.length()):
+		if prev_was_upper:
+			if _is_digit(p_identifier[i]) or _is_ascii_lower_case(p_identifier[i]):
+				if not _is_digit(p_identifier[i]):
+					# These conditions only apply when the separator is not a digit.
+					if i - current_part_start == 1:
+						# Upper character was only the beginning of a word.
+						prev_was_upper = false
+						continue
+					if i != p_identifier.length():
+						# If this is not the last character, the last uppercase
+						# character is the start of the next word.
+						i -= 1
+				if i - current_part_start > 0:
+					parts.append(p_identifier.substr(current_part_start, i - current_part_start))
+					current_part_start = i
+					prev_was_upper = false
+		else:
+			if _is_digit(p_identifier[i]) or _is_ascii_upper_case(p_identifier[i]):
+				parts.append(p_identifier.substr(current_part_start, i - current_part_start))
+				current_part_start = i
+				prev_was_upper = true
+
+	# Add the rest of the identifier as the last part.
+	if current_part_start != p_identifier.length():
+		parts.append(p_identifier.substr(current_part_start))
+	return parts
+
+
+static func _pascal_to_pascal_case(p_identifier: String) -> String:
+	if p_identifier.length() == 0:
+		return p_identifier
+	if p_identifier.length() <= 2:
+		return p_identifier.to_upper()
+	if PASCAL_CASE_NAME_OVERRIDES.has(p_identifier):
+		return PASCAL_CASE_NAME_OVERRIDES[p_identifier]
+	
+	var parts := _split_pascal_case(p_identifier)
+	var ret := ""
+	for part in parts:
+		if PASCAL_CASE_PART_OVERRIDES.has(part):
+			ret += PASCAL_CASE_PART_OVERRIDES[part]
+			continue
+		
+		if part.length() <= 2 and _is_ascii_upper_case(part):
+			ret += part.to_upper()
+			continue
+		
+		part[0] = part[0].to_upper()
+		for i in range(1, part.length()):
+			if _is_digit(part[i - 1]):
+				# Use uppercase after digits.
+				part[i] = part[i].to_upper()
+			else:
+				part[i] = part[i].to_lower()
+		ret += part
+	return ret
