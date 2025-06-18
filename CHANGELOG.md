@@ -1,5 +1,10 @@
 # Changelog
-## [Unreleased](https://github.com/gilzoide/godot-csharp-gdextension-bindgen/compare/0.3.0...HEAD)
+## [Unreleased](https://github.com/gilzoide/godot-csharp-gdextension-bindgen/compare/0.3.1...HEAD)
+
+
+## [0.3.1](https://github.com/gilzoide/godot-csharp-gdextension-bindgen/releases/tag/0.3.1)
+### Fixed
+- Files exported in the zip downloaded from GitHub
 
 
 ## [0.3.0](https://github.com/gilzoide/godot-csharp-gdextension-bindgen/releases/tag/0.3.0)
