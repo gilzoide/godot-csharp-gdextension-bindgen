@@ -83,6 +83,11 @@ static func generate_csharp_script(
 	var parent_class_is_extension = _is_extension_class(parent_class)
 	var no_inheritance = parent_class_is_extension
 	var engine_class = _first_non_extension_parent(cls_name)
+	
+	if engine_class=="Object":
+		engine_class="GodotObject"
+	if parent_class=="Object":
+		parent_class="GodotObject"
 
 	var regions = PackedStringArray()
 
@@ -121,6 +126,7 @@ static func generate_csharp_script(
 			protected {cls_name}([NotNull] {engine_class} @object)
 			{
 				_object = @object;
+				if (_object.GetClass() != NativeName) throw new InvalidCastException($"Cannot cast object of type {@object.GetClass()} to type {NativeName}");
 			}
 		"""
 	var ctor = ctor_fmt.dedent().format({
@@ -133,51 +139,76 @@ static func generate_csharp_script(
 		public static implicit operator {engine_class}({cls_name} self) => self?._object;
 		public static implicit operator Variant({cls_name} self) => self?._object;
 		public static explicit operator {cls_name}(Variant variant) => variant.AsGodotObject() != null ? new(variant) : null;
+		public static explicit operator {cls_name}({engine_class} obj) => obj!=null ? new(obj) : null;
 	""".dedent().format({
 		cls_name = cls_name,
 		engine_class = engine_class,
 	}).strip_edges()
 	regions.append(casts)
-
+	
+	var used_method_names = PackedStringArray()
+	var used_field_names  = PackedStringArray()
+	
+	
 	# ENUMS
 	var enums = PackedStringArray()
 	for enum_name in ClassDB.class_get_enum_list(cls_name, true):
 		enums.append(_generate_enum(cls_name, enum_name))
+
+	# PROPERTIES
+	var properties = PackedStringArray()
+	var property_names = PackedStringArray()
+	for property in ClassDB.class_get_property_list(cls_name, true):
+		var property_name = property["name"]
+		if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
+			continue
+		if property_name.begins_with("_"):
+			continue
+		property_names.append(property_name)
+		var csharp_property_name = property_name.to_pascal_case()
+		used_field_names.append(csharp_property_name)
+		properties.append(_generate_property(cls_name, property))
+		
+		
+	var inherited_properties = PackedStringArray()
+	if not parent_class_is_extension:
+		for inherited_class in _get_parent_classes(cls_name):
+			for property in ClassDB.class_get_property_list(inherited_class, true):
+				var property_name = property["name"]
+				if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
+					continue
+				if property_name.begins_with("_"):
+					continue
+				var csharp_property_name = property_name.to_pascal_case()
+				used_field_names.append(csharp_property_name)
+				
+				inherited_properties.append(_generate_property(inherited_class, property))
 
 	# INTEGER CONSTANTS
 	var integer_constants = PackedStringArray()
 	for constant_name in ClassDB.class_get_integer_constant_list(cls_name, true):
 		if not ClassDB.class_get_integer_constant_enum(cls_name, constant_name, true).is_empty():
 			continue
-		integer_constants.append(_generate_integer_constant(cls_name, constant_name))
+		var csharp_constant_name := constant_name.to_pascal_case()
+		if csharp_constant_name in used_field_names:
+			csharp_constant_name += "Const"
+		integer_constants.append(_generate_integer_constant(cls_name, constant_name, csharp_constant_name))
 
-	# PROPERTIES
-	var properties = PackedStringArray()
-	var property_names = PackedStringArray()
-	for property in ClassDB.class_get_property_list(cls_name, true):
-		if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
-			continue
-		property_names.append(property["name"])
-		properties.append(_generate_property(cls_name, property))
-
-	var inherited_properties = PackedStringArray()
-	if not parent_class_is_extension:
-		for inherited_class in _get_parent_classes(cls_name):
-			for property in ClassDB.class_get_property_list(inherited_class, true):
-				if property["usage"] & (PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SUBGROUP):
-					continue
-				inherited_properties.append(_generate_property(inherited_class, property))
 
 	# METHODS
 	var methods = PackedStringArray()
 	var method_names = PackedStringArray()
+	
 	for method in ClassDB.class_get_method_list(cls_name, true):
 		if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
 			continue
-		if method["name"].begins_with("_"):
+		var method_name = method["name"]
+		if method_name.begins_with("_"):
 			continue
-		method_names.append(method["name"])
+		method_names.append(method_name)
 		methods.append(_generate_method(cls_name, method))
+		used_method_names.append(_to_csharp_method_name(method_name))
+
 
 	var inherited_methods = PackedStringArray()
 	if not parent_class_is_extension:
@@ -185,22 +216,34 @@ static func generate_csharp_script(
 			for method in ClassDB.class_get_method_list(inherited_class, true):
 				if method["flags"] & (METHOD_FLAG_VIRTUAL | METHOD_FLAG_VIRTUAL_REQUIRED):
 					continue
-				if method["name"].begins_with("_"):
+				var method_name = method["name"]
+				if method_name.begins_with("_"):
 					continue
-				inherited_methods.append(_generate_method(inherited_class, method))
-
+				var generated_method=_generate_method(inherited_class, method)
+				if method_name in method_names:
+					generated_method=_wrap_in_comment(generated_method, "Already exists on "+str(cls_name))
+				else:
+					used_method_names.append(_to_csharp_method_name(method_name))
+				inherited_methods.append(generated_method)
+				
+				
 	# SIGNALS
 	var signals = PackedStringArray()
 	var signal_names = PackedStringArray()
 	for sig in ClassDB.class_get_signal_list(cls_name, true):
-		signal_names.append(sig["name"])
-		signals.append(_generate_signal(cls_name, sig))
+		var signal_name=sig["name"]
+		signal_names.append(signal_name)
+		var suffix = "Event" if signal_name.to_pascal_case() in used_method_names else ""
+		signals.append(_generate_signal(cls_name, sig, suffix))
 
 	var inherited_signals = PackedStringArray()
 	if not parent_class_is_extension:
 		for inherited_class in _get_parent_classes(cls_name):
 			for method in ClassDB.class_get_signal_list(inherited_class, true):
-				inherited_signals.append(_generate_signal(inherited_class, method))
+				var signal_name=method["name"]
+				signal_names.append(signal_name)
+				var suffix = "Event" if signal_name.to_pascal_case() in used_method_names else ""
+				inherited_signals.append(_generate_signal(inherited_class, method, suffix))
 
 	# StringName caches
 	regions.append(_generate_strings_class(cls_name, StringNameType.PROPERTY_NAME, property_names))
@@ -209,7 +252,7 @@ static func generate_csharp_script(
 	regions.append("private static readonly StringName NativeName = \"{cls_name}\";".format({
 		cls_name = cls_name,
 	}))
-
+	
 	if not enums.is_empty():
 		regions.append("#region Enums")
 		regions.append("\n\n".join(enums))
@@ -275,7 +318,8 @@ static func generate_csharp_script(
 
 	if not DirAccess.dir_exists_absolute(output_dir):
 		DirAccess.make_dir_recursive_absolute(output_dir)
-
+		
+		
 	var new_script = FileAccess.open(output_dir.path_join(cls_name + ".cs"), FileAccess.WRITE)
 	new_script.store_string(code)
 
@@ -289,6 +333,10 @@ static func generate_gdextension_csharp_scripts(
 		if _is_extension_class(cls_name):
 			generate_csharp_script(cls_name, output_dir, name_space)
 
+static func _as_valid_identifier(name:String) -> String:
+	if len(name)>0 and name[0]>="0" and name[0]<="9": #Fix for Steamworks
+		name = "_"+name
+	return name
 
 static func _generate_enum(cls_name: StringName, enum_name: StringName) -> String:
 	var common_prefix = null
@@ -306,7 +354,7 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 	var constants = PackedStringArray()
 	for constant_name in ClassDB.class_get_enum_constants(cls_name, enum_name, true):
 		constants.append("{csharp_constant_name} = {constant_value}L,".format({
-			csharp_constant_name = constant_name.substr(common_prefix.length()).to_pascal_case(),
+			csharp_constant_name = _as_valid_identifier(constant_name.substr(common_prefix.length()).to_pascal_case()),
 			constant_value = ClassDB.class_get_integer_constant(cls_name, constant_name),
 		}))
 
@@ -324,9 +372,9 @@ static func _generate_enum(cls_name: StringName, enum_name: StringName) -> Strin
 	}).strip_edges()
 
 
-static func _generate_integer_constant(cls_name: StringName, constant_name: StringName) -> String:
+static func _generate_integer_constant(cls_name: StringName, constant_name: StringName, csharp_constant_name:String) -> String:
 	return "public const long {csharp_constant_name} = {constant_value}L;".format({
-		csharp_constant_name = constant_name.to_pascal_case(),
+		csharp_constant_name = csharp_constant_name,
 		constant_value = ClassDB.class_get_integer_constant(cls_name, constant_name),
 	})
 
@@ -346,7 +394,8 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 				csharp_property_name = csharp_property_name,
 			}))
 		else:
-			getset.append("get => _object.{csharp_property_name};".format({
+			getset.append("get => {get_cast}_object.{csharp_property_name};".format({
+				get_cast = _property_get_cast(cls_name, property),
 				csharp_property_name = csharp_property_name,
 			}))
 
@@ -354,11 +403,12 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 	if setter:
 		if _is_extension_class(cls_name):
 			getset.append("set => _object.Set(PropertyName.{csharp_property_name}, {set_cast}value);".format({
-				set_cast = _property_set_cast(property),
+				set_cast = _property_set_cast(cls_name, property, true),
 				csharp_property_name = csharp_property_name,
 			}))
 		else:
-			getset.append("set => _object.{csharp_property_name} = value;".format({
+			getset.append("set => _object.{csharp_property_name} = {set_cast}value;".format({
+				set_cast = _property_set_cast(cls_name, property, false),
 				csharp_property_name = csharp_property_name,
 			}))
 
@@ -376,12 +426,14 @@ static func _generate_property(cls_name: StringName, property: Dictionary) -> St
 
 static func _generate_method(cls_name: StringName, method: Dictionary) -> String:
 	var method_name = method["name"]
-	var csharp_method_name = method_name.to_pascal_case()
+	var csharp_method_name = _to_csharp_method_name(method_name)
 	var return_type = _get_method_return_type(cls_name, method_name, method["return"])
 	var is_static = method["flags"] & METHOD_FLAG_STATIC
-
+	
+	var is_extension_class = _is_extension_class(cls_name)
 	var arg_types = PackedStringArray()
 	var arg_names = PackedStringArray()
+	var call_values = PackedStringArray()
 
 	var args = PackedStringArray()
 	for argument in method["args"]:
@@ -395,10 +447,12 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 			arg_name = arg_name,
 		}))
 		arg_types.append(arg_type)
-		if _property_is_enum(argument):
-			arg_names.append("(int)" + arg_name)
+		arg_names.append(arg_name)
+		
+		if _property_is_enum(argument) and is_extension_class:
+			call_values.append("(int)" + arg_name)
 		else:
-			arg_names.append(arg_name)
+			call_values.append(arg_name)
 
 	var implementation = PackedStringArray()
 	var default_args = method["default_args"]
@@ -432,10 +486,13 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 			or default_value is Color
 		):
 			args[i] = args[i].replace(arg_types[i], arg_types[i] + "?")
-			var impl = "%s ??= new%s;" % [arg_names[i], default_value]
-			if not OS.has_feature("double"):
-				impl = impl.replace(",", "f,").replace(")", "f)")
-			implementation.append(impl)
+			call_values[i] = "%s ?? new%s" % [arg_names[i], str(default_value).replace(",", "f,").replace(")", "f)")]
+			default_value = "null"
+		elif (
+			default_value is Vector2i or default_value is Vector3i
+		):
+			args[i] = args[i].replace(arg_types[i], arg_types[i] + "?")
+			call_values[i] = "%s ?? new%s" % [arg_names[i], default_value] #Cannot pass nullable in directly
 			default_value = "null"
 		elif (
 			default_value is PackedByteArray
@@ -450,12 +507,14 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 		elif default_value is Transform2D:
 			assert(default_value == Transform2D.IDENTITY, "Only identity Transform2D is supported as default value")
 			args[i] = args[i].replace(arg_types[i], arg_types[i] + "?")
-			implementation.append("%s ??= Godot.Transform2D.Identity;" % arg_names[i])
+			#implementation.append("%s ??= Godot.Transform2D.Identity;" % arg_names[i])
+			call_values[i] = "%s ?? %s" % [arg_names[i], "Godot.Transform2D.Identity"]
 			default_value = "null"
 		elif default_value is Transform3D:
 			assert(default_value == Transform3D.IDENTITY, "Only identity Transform3D is supported as default value")
 			args[i] = args[i].replace(arg_types[i], arg_types[i] + "?")
-			implementation.append("%s ??= Godot.Transform3D.Identity;" % arg_names[i])
+			#implementation.append("%s ??= Godot.Transform3D.Identity;" % arg_names[i])
+			call_values[i] = "%s ?? %s" % [arg_names[i], "Godot.Transform3D.Identity"]
 			default_value = "null"
 		args[i] += " = " + str(default_value)
 		i += 1
@@ -464,33 +523,35 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 		args.append("params Variant[] varargs")
 		arg_names.append("varargs")
 
-	if _is_extension_class(cls_name):
-		arg_names.insert(0, "MethodName.{csharp_method_name}".format({
+	if is_extension_class:
+		call_values.insert(0, "MethodName.{csharp_method_name}".format({
 			csharp_method_name = csharp_method_name,
 		}))
 		if is_static:
 			implementation.append("{maybe_return}ClassDB.ClassCallStatic(NativeName, {arg_names});".format({
-				arg_names = ", ".join(arg_names),
+				arg_names = ", ".join(call_values),
 				maybe_return = "return " + _property_get_cast(cls_name, method["return"]) if return_type != "void" else "",
 			}))
 		else:
 			implementation.append("{maybe_return}_object.Call({arg_names});".format({
-				arg_names = ", ".join(arg_names),
+				arg_names = ", ".join(call_values),
 				maybe_return = "return " + _property_get_cast(cls_name, method["return"]) if return_type != "void" else "",
 			}))
 	else:
 		if is_static:
-			implementation.append("{maybe_return}{engine_class}.{csharp_method_name}({arg_names});".format({
-				arg_names = ", ".join(arg_names),
+			implementation.append("{maybe_return}{maybe_cast}{engine_class}.{csharp_method_name}({arg_names});".format({
+				arg_names = ", ".join(call_values),
 				engine_class = _first_non_extension_parent(cls_name),
 				csharp_method_name = csharp_method_name,
 				maybe_return = "return " if return_type != "void" else "",
+				maybe_cast = "(float)" if return_type == "float" else "", #Required for doubles
 			}))
 		else:
-			implementation.append("{maybe_return}_object.{csharp_method_name}({arg_names});".format({
-				arg_names = ", ".join(arg_names),
+			implementation.append("{maybe_return}{maybe_cast}_object.{csharp_method_name}({arg_names});".format({
+				arg_names = ", ".join(call_values),
 				csharp_method_name = csharp_method_name,
 				maybe_return = "return " if return_type != "void" else "",
+				maybe_cast = "(float)" if return_type == "float" else "", #Required for doubles
 			}))
 
 	return """
@@ -508,7 +569,7 @@ static func _generate_method(cls_name: StringName, method: Dictionary) -> String
 	}).strip_edges()
 
 
-static func _generate_signal(cls_name: StringName, sig: Dictionary):
+static func _generate_signal(cls_name: StringName, sig: Dictionary, suffix:String):
 	var signal_name = sig["name"]
 	var csharp_signal_name = signal_name.to_pascal_case()
 	var return_type = _get_method_return_type(cls_name, signal_name, sig["return"])
@@ -533,7 +594,7 @@ static func _generate_signal(cls_name: StringName, sig: Dictionary):
 		})
 
 	return """
-		public event {delegate_type} {csharp_signal_name}
+		public event {delegate_type} {csharp_signal_name}{suffix}
 		{
 			add
 			{
@@ -547,12 +608,25 @@ static func _generate_signal(cls_name: StringName, sig: Dictionary):
 	""".dedent().format({
 		delegate_type = delegate_type,
 		csharp_signal_name = csharp_signal_name,
+		suffix = suffix,
 	}).strip_edges()
 
 
 static func _property_is_enum(property: Dictionary) -> bool:
-	return property["usage"] & (PROPERTY_USAGE_CLASS_IS_ENUM | PROPERTY_USAGE_CLASS_IS_BITFIELD)
-
+	
+	if property["usage"] & (PROPERTY_USAGE_CLASS_IS_ENUM | PROPERTY_USAGE_CLASS_IS_BITFIELD):
+		return true
+	return false
+	
+static func _property_is_unknown_enum(property: Dictionary) -> bool:
+	if property["usage"] & (PROPERTY_USAGE_CLASS_IS_ENUM | PROPERTY_USAGE_CLASS_IS_BITFIELD):
+		return true
+	if property["hint"] == PROPERTY_HINT_ENUM:
+		return true
+	if property["hint"] == PROPERTY_HINT_FLAGS:
+		return true
+	return false
+	
 
 static func _get_property_type(cls_name: StringName, property: Dictionary) -> String:
 	match property["type"]:
@@ -565,11 +639,28 @@ static func _get_property_type(cls_name: StringName, property: Dictionary) -> St
 				var enum_name = property["class_name"]
 				if enum_name == "Error":
 					return "Godot.Error"
+				
+				if enum_name=="":
+					return cls_name+"."+property["name"].to_pascal_case()+"Enum/*Guess*/"
+				
 				var split = enum_name.split(".")
 				if split.size() == 1:
 					return enum_name + ("Enum" if _needs_enum_suffix(cls_name, enum_name) else "")
 				else:
 					return enum_name + ("Enum" if _needs_enum_suffix(split[0], split[1]) else "")
+			elif _property_is_unknown_enum(property):
+				var property_name_csharp = property["name"].to_pascal_case()
+				
+				if cls_name=="Node3D":
+					if property_name_csharp=="RotationOrder":
+						return "EulerOrder" #Hardcoded. Cannot see a way to get this C# enum name from ClassDB
+				
+				var enum_name_csharp = cls_name+"."+property_name_csharp+"Enum"
+				if ClassDB.class_has_enum(cls_name, property_name_csharp):
+					return enum_name_csharp
+				
+				return "int"+"/*"+enum_name_csharp+"*/"
+			
 			return "int"
 		TYPE_FLOAT:
 			return "double" if OS.has_feature("double") else "float"
@@ -651,20 +742,32 @@ static func _get_mapped_variant_type(variant_type_name: String) -> String:
 		type_string(TYPE_PACKED_VECTOR4_ARRAY): "Godot.Vector4[]",
 		type_string(TYPE_PACKED_COLOR_ARRAY): "Godot.Color[]",
 	}
-	return _type_map.get(variant_type_name, "Godot." + variant_type_name)
+	var variant_name = _type_map.get(variant_type_name, null)
+	if variant_name!=null:
+		return variant_name
+	if ClassDB.class_exists(variant_type_name):
+		if ClassDB.class_get_api_type(variant_type_name)==ClassDB.APIType.API_CORE:
+			return variant_type_name
+	
+	return "GodotObject/*"+variant_type_name+"*/"
 
 
 static func _property_get_cast(cls_name: StringName, property: Dictionary):
 	var property_type = _get_property_type(cls_name, property)
-	if _property_is_enum(property):
+	
+	if _property_is_enum(property) or _property_is_unknown_enum(property):
 		return "(%s)(int)" % property_type
 	else:
 		return "(%s)" % property_type
 
 
-static func _property_set_cast(property: Dictionary):
+static func _property_set_cast(cls_name: StringName, property: Dictionary, is_variant_target:bool):
+	var property_type = _get_property_type(cls_name, property)
+	
 	if _property_is_enum(property):
-		return "(int)"
+		return "(int)(%s)" % property_type
+	elif _property_is_unknown_enum(property):
+		return "(int)" if is_variant_target else ""
 	else:
 		return ""
 
@@ -700,6 +803,8 @@ static func _get_method_return_type(cls_name: StringName, method_name: StringNam
 		return _get_property_type(cls_name, method_return)
 
 
+
+
 static func _get_parent_classes(cls_name: StringName) -> Array[StringName]:
 	var parent_classes = [] as Array[StringName]
 	while true:
@@ -712,6 +817,7 @@ static func _get_parent_classes(cls_name: StringName) -> Array[StringName]:
 
 static func _generate_strings_class(cls_name: StringName, string_name_type: StringNameType, string_names: PackedStringArray) -> String:
 	var parent_class = ClassDB.get_parent_class(cls_name)
+	
 	var lines = PackedStringArray()
 	for name in string_names:
 		if string_name_type == StringNameType.METHOD_NAME and ClassDB.class_has_method(parent_class, name):
@@ -722,6 +828,11 @@ static func _generate_strings_class(cls_name: StringName, string_name_type: Stri
 			cs_name = name.to_pascal_case(),
 			name = name,
 		}))
+	
+	var parent_class_csharp = parent_class
+	if parent_class_csharp=="Object":
+		parent_class_csharp="GodotObject"
+	
 	return """
 		public {maybe_new}class {strings_class} : {parent_class}.{strings_class}
 		{
@@ -730,7 +841,7 @@ static func _generate_strings_class(cls_name: StringName, string_name_type: Stri
 	""".dedent().format({
 		lines = "\n".join(lines).indent("\t"),
 		maybe_new = "new " if _is_extension_class(parent_class) else "",
-		parent_class = parent_class,
+		parent_class = parent_class_csharp,
 		strings_class = StringNameTypeName[string_name_type],
 	}).strip_edges()
 
@@ -771,7 +882,15 @@ static func _needs_enum_suffix(cls_name: StringName, enum_name: String) -> bool:
 			return true
 	return false
 
-
+static func _needs_signal_suffix(cls_name: StringName, signal_name: String) -> bool:
+	if ClassDB.class_has_method(cls_name, signal_name):
+		return true
+	var properties = ClassDB.class_get_property_list(cls_name)
+	for property in properties:
+		if signal_name == property["name"]:
+			return true
+	return false
+	
 # Pascal case conversion used for class names.
 # Replicates the logic from `godot/modules/mono/utils/naming_utils.cpp`
 static func _is_ascii_upper_case(c: String) -> bool:
@@ -786,6 +905,16 @@ static func _is_digit(c: String) -> bool:
 	return c >= "0" and c <= "9"
 
 
+static func _wrap_in_comment(code_block: String, comment:String, active:bool=true) -> String:
+	if not active:
+		return code_block
+	return """
+	/* {comment}
+	{code_block}
+	*/
+	""".dedent().format({code_block=code_block, comment=comment})
+	
+	
 static func _split_pascal_case(p_identifier: String) -> PackedStringArray:
 	var parts := PackedStringArray()
 	var current_part_start := 0
@@ -817,6 +946,13 @@ static func _split_pascal_case(p_identifier: String) -> PackedStringArray:
 	if current_part_start != p_identifier.length():
 		parts.append(p_identifier.substr(current_part_start))
 	return parts
+
+
+static func _to_csharp_method_name(method_name : String) -> String:
+	var csharp_method_name = method_name.to_pascal_case()
+	if csharp_method_name.ends_with("3d"):
+		csharp_method_name = csharp_method_name.substr(0,csharp_method_name.length()-2)+"3D"
+	return csharp_method_name
 
 
 static func _pascal_to_pascal_case(p_identifier: String) -> String:
